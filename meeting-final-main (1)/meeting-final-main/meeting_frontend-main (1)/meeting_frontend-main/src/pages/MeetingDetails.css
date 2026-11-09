@@ -1,0 +1,168 @@
+/* =========================
+   HEADER
+========================= */
+
+.meeting-header {
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 25px;
+
+  padding-bottom: 15px;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* =========================
+   DELETE BUTTON
+========================= */
+
+.delete-btn {
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 12px 18px;
+
+  background: linear-gradient(
+    135deg,
+    #ef4444,
+    #dc2626
+  );
+
+  color: white;
+
+  border: none;
+
+  border-radius: 10px;
+
+  cursor: pointer;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 20px rgba(
+      239,
+      68,
+      68,
+      0.35
+    );
+}
+
+.delete-btn:active {
+
+  transform: scale(0.98);
+}
+
+/* =========================
+   MEETING DETAILS
+========================= */
+
+.meeting-container {
+
+  max-width: 1000px;
+
+  margin: 40px auto;
+
+  padding: 30px;
+
+  background: #ffffff;
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 10px 30px rgba(
+      0,
+      0,
+      0,
+      0.08
+    );
+}
+
+.meeting-title {
+
+  color: #111827;
+
+  font-size: 28px;
+
+  margin-bottom: 20px;
+}
+
+/* =========================
+   SECTIONS
+========================= */
+
+.section-card {
+
+  background: #f8fafc;
+
+  padding: 20px;
+
+  border-radius: 15px;
+
+  margin-bottom: 20px;
+
+  border-left: 5px solid #3b82f6;
+}
+
+.section-card h3 {
+
+  color: #1e40af;
+
+  margin-bottom: 10px;
+}
+
+.section-card p {
+
+  line-height: 1.7;
+
+  color: #374151;
+}
+
+/* =========================
+   TASK CARD
+========================= */
+
+.task-card {
+
+  background: white;
+
+  padding: 15px;
+
+  border-radius: 12px;
+
+  margin-bottom: 15px;
+
+  border-left: 5px solid #22c55e;
+
+  box-shadow:
+    0 3px 10px rgba(
+      0,
+      0,
+      0,
+      0.05
+    );
+
+  transition: 0.3s;
+}
+
+.task-card:hover {
+
+  transform: translateX(5px);
+}
+
+.task-card p {
+
+  margin: 6px 0;
+}

@@ -1,0 +1,285 @@
+.calendar-page {
+
+  min-height: 100vh;
+
+  padding: 30px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #0f172a,
+      #1e293b
+    );
+
+  color: white;
+}
+
+.calendar-page h1 {
+
+  text-align: center;
+
+  margin-bottom: 25px;
+}
+
+.calendar-page h2 {
+
+  margin-top: 30px;
+
+  margin-bottom: 20px;
+
+  text-align: center;
+}
+
+/* Calendar */
+
+.react-calendar {
+
+  margin: auto;
+
+  border-radius: 15px;
+
+  border: none;
+
+  padding: 15px;
+
+  width: 800px;
+
+  max-width: 100%;
+
+  background: white;
+
+  color: black;
+
+  box-shadow:
+    0 10px 25px
+    rgba(0,0,0,0.2);
+}
+
+/* Task Count Marker */
+
+.task-marker {
+
+  background: #3b82f6;
+
+  color: white;
+
+  width: 22px;
+
+  height: 22px;
+
+  border-radius: 50%;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  margin: auto;
+
+  font-size: 12px;
+
+  font-weight: bold;
+}
+
+/* Task Cards */
+
+.task-card {
+
+  background: white;
+
+  color: black;
+
+  border-radius: 15px;
+
+  padding: 20px;
+
+  margin: 15px auto;
+
+  max-width: 700px;
+
+  box-shadow:
+    0 5px 15px
+    rgba(0,0,0,0.15);
+}
+
+.task-card h3 {
+
+  margin-bottom: 10px;
+
+  color: #2563eb;
+}
+
+.task-card p {
+
+  margin: 8px 0;
+}
+
+/* Overdue */
+
+.overdue {
+
+  border-left:
+    6px solid red;
+}
+
+/* Status */
+
+.completed {
+
+  color: green;
+
+  font-weight: bold;
+}
+
+.progress {
+
+  color: orange;
+
+  font-weight: bold;
+}
+
+.pending {
+
+  color: red;
+
+  font-weight: bold;
+}
+
+.status-row {
+
+  margin-top: 15px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+}
+
+.status-select {
+
+  padding: 8px 12px;
+
+  border-radius: 8px;
+
+  border: 1px solid #ccc;
+
+  background: white;
+
+  cursor: pointer;
+
+  min-width: 150px;
+}
+
+.status-select:focus {
+
+  outline: none;
+
+  border-color: #2563eb;
+}
+
+/* No Task */
+
+.no-task {
+
+  text-align: center;
+
+  font-size: 18px;
+
+  margin-top: 40px;
+
+  color: #cbd5e1;
+}
+.status-row {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.status-select {
+  width: 220px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+  color: #000;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.pending {
+  color: orange;
+  font-weight: bold;
+}
+
+.progress {
+  color: blue;
+  font-weight: bold;
+}
+
+.completed {
+  color: green;
+  font-weight: bold;
+}
+
+.overdue {
+  border-left: 5px solid red;
+}
+
+.task-marker {
+  background: red;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  margin: auto;
+  text-align: center;
+  line-height: 18px;
+}
+
+.no-task {
+  margin-top: 20px;
+  font-size: 18px;
+  text-align: center;
+}
+.deadline-edit {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.deadline-edit input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.status-select {
+  padding: 8px;
+  border-radius: 6px;
+}
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.export-btn {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.export-btn:hover {
+  opacity: 0.9;
+}

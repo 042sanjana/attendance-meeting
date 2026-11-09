@@ -1,0 +1,563 @@
+/* =========================
+   GOOGLE FONT
+========================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* =========================
+   GLOBAL
+========================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+}
+
+/* =========================
+   PAGE BACKGROUND
+========================= */
+
+.meeting-container {
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 40px;
+
+  background:
+    linear-gradient(
+      -45deg,
+      #0f172a,
+      #1e293b,
+      #312e81,
+      #0f172a
+    );
+
+  background-size: 400% 400%;
+
+  animation:
+    gradientMove 12s ease infinite;
+}
+
+@keyframes gradientMove {
+
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* =========================
+   MAIN CARD
+========================= */
+
+.glass-card {
+
+  width: 100%;
+  max-width: 1100px;
+
+  padding: 35px;
+
+  border-radius: 25px;
+
+  background:
+    rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(18px);
+
+  border:
+    1px solid rgba(255,255,255,0.15);
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.35);
+
+  color: white;
+
+  animation:
+    fadeUp 0.8s ease;
+}
+
+@keyframes fadeUp {
+
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.glass-card h1 {
+
+  text-align: center;
+
+  font-size: 2.5rem;
+
+  margin-bottom: 10px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #38bdf8,
+      #a855f7
+    );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glass-card p {
+
+  text-align: center;
+
+  color: #cbd5e1;
+
+  margin-bottom: 30px;
+}
+
+/* =========================
+   UPLOAD BOX
+========================= */
+
+.upload-box {
+
+  border: 2px dashed #38bdf8;
+
+  border-radius: 18px;
+
+  padding: 30px;
+
+  text-align: center;
+
+  background:
+    rgba(255,255,255,0.04);
+
+  transition: 0.3s;
+}
+
+.upload-box:hover {
+
+  border-color: #a855f7;
+
+  transform: translateY(-3px);
+
+  background:
+    rgba(255,255,255,0.06);
+}
+
+.upload-box input {
+
+  width: 100%;
+
+  color: white;
+
+  cursor: pointer;
+}
+
+input[type="file"]::file-selector-button {
+
+  background:
+    linear-gradient(
+      90deg,
+      #3b82f6,
+      #8b5cf6
+    );
+
+  color: white;
+
+  border: none;
+
+  padding: 12px 18px;
+
+  border-radius: 10px;
+
+  margin-right: 12px;
+
+  cursor: pointer;
+}
+
+/* =========================
+   FILE INFO
+========================= */
+
+.selected-file {
+
+  margin-top: 15px;
+
+  text-align: center;
+
+  color: #22c55e;
+
+  font-weight: 600;
+
+  animation:
+    pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+button {
+
+  width: 100%;
+
+  margin-top: 25px;
+
+  padding: 15px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  font-size: 16px;
+
+  font-weight: 600;
+
+  color: white;
+
+  cursor: pointer;
+
+  background:
+    linear-gradient(
+      90deg,
+      #3b82f6,
+      #8b5cf6
+    );
+
+  transition: 0.3s;
+}
+
+button:hover {
+
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 10px 25px rgba(
+      59,
+      130,
+      246,
+      0.5
+    );
+}
+
+button:disabled {
+
+  opacity: 0.7;
+
+  cursor: not-allowed;
+}
+
+/* =========================
+   LOADER
+========================= */
+
+.loader-section {
+
+  text-align: center;
+
+  margin-top: 25px;
+}
+
+.loader {
+
+  width: 60px;
+  height: 60px;
+
+  margin: auto;
+
+  border:
+    6px solid rgba(
+      255,
+      255,
+      255,
+      0.15
+    );
+
+  border-top:
+    6px solid #38bdf8;
+
+  border-radius: 50%;
+
+  animation:
+    spin 1s linear infinite;
+}
+
+@keyframes spin {
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loader-section p {
+
+  margin-top: 15px;
+
+  color: #38bdf8;
+}
+
+/* =========================
+   RESULTS
+========================= */
+
+.results {
+
+  margin-top: 35px;
+}
+
+/* =========================
+   SUMMARY CARD
+========================= */
+
+.summary-card {
+
+  padding: 25px;
+
+  border-radius: 18px;
+
+  background:
+    rgba(255,255,255,0.05);
+
+  border-left:
+    5px solid #38bdf8;
+
+  margin-bottom: 25px;
+
+  transition: 0.3s;
+}
+
+.summary-card:hover {
+
+  transform: translateY(-4px);
+}
+
+.summary-card h2 {
+
+  margin-bottom: 15px;
+
+  color: #38bdf8;
+}
+
+.summary-card p {
+
+  text-align: left;
+
+  line-height: 1.8;
+
+  color: #e2e8f0;
+}
+
+/* =========================
+   TASK SECTION
+========================= */
+/* =========================
+   TASK SECTION
+========================= */
+
+.task-section {
+  margin-top: 30px;
+}
+
+.task-section h2 {
+  color: #22c55e;
+  margin-bottom: 20px;
+}
+
+.task-card {
+
+  background: #ffffff;
+
+  border-left: 6px solid #22c55e;
+
+  border-radius: 16px;
+
+  padding: 20px;
+
+  margin-bottom: 18px;
+
+  box-shadow:
+    0 8px 20px rgba(
+      0,
+      0,
+      0,
+      0.15
+    );
+
+  transition: all 0.3s ease;
+}
+
+.task-card:hover {
+
+  transform:
+    translateY(-5px);
+
+  box-shadow:
+    0 15px 30px rgba(
+      0,
+      0,
+      0,
+      0.25
+    );
+}
+
+.task-card h3 {
+
+  color: #111827;
+
+  margin-bottom: 12px;
+
+  font-size: 1.1rem;
+}
+
+.task-card p {
+
+  margin: 8px 0;
+
+  color: #374151;
+
+  text-align: left;
+}
+
+.task-card strong {
+
+  color: #111827;
+}
+.priority-high {
+
+  border-left:
+    6px solid #ef4444;
+}
+
+.priority-medium {
+
+  border-left:
+    6px solid #f59e0b;
+}
+
+.priority-low {
+
+  border-left:
+    6px solid #22c55e;
+}
+
+.priority-overdue {
+
+  border-left:
+    6px solid #dc2626;
+
+  background:
+    #fef2f2;
+}
+/* =========================
+   TRANSCRIPT
+========================= */
+
+.transcript-card {
+
+  margin-top: 30px;
+
+  background:
+    rgba(255,255,255,0.05);
+
+  padding: 25px;
+
+  border-radius: 18px;
+}
+
+.transcript-card h2 {
+
+  margin-bottom: 15px;
+
+  color: #fbbf24;
+}
+
+textarea {
+
+  width: 100%;
+
+  height: 320px;
+
+  padding: 15px;
+
+  border: none;
+
+  outline: none;
+
+  resize: none;
+
+  border-radius: 12px;
+
+  background:
+    rgba(255,255,255,0.05);
+
+  color: white;
+
+  line-height: 1.6;
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+textarea::-webkit-scrollbar {
+
+  width: 8px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+
+  background: #38bdf8;
+
+  border-radius: 20px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+
+  .glass-card {
+
+    padding: 20px;
+  }
+
+  .glass-card h1 {
+
+    font-size: 1.8rem;
+  }
+
+  textarea {
+
+    height: 220px;
+  }
+}

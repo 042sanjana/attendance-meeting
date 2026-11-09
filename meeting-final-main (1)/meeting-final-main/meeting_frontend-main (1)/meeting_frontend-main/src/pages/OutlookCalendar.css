@@ -1,0 +1,22 @@
+.outlook-page {
+  padding: 30px;
+}
+
+.task-card {
+  background: white;
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px
+    rgba(0,0,0,0.1);
+}
+
+.task-count {
+  background: red;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  margin: auto;
+}

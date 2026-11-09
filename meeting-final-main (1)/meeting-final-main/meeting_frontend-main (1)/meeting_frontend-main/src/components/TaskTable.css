@@ -1,0 +1,40 @@
+.task-table-container {
+  padding: 20px;
+}
+
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.task-table th,
+.task-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+.task-table th {
+  background: #1976d2;
+  color: white;
+}
+
+.task-table tr:nth-child(even) {
+  background: #f5f5f5;
+}
+
+.completed {
+  color: green;
+  font-weight: bold;
+}
+
+.progress {
+  color: orange;
+  font-weight: bold;
+}
+
+.pending {
+  color: red;
+  font-weight: bold;
+}
