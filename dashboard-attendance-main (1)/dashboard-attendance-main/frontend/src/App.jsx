@@ -13,6 +13,7 @@ import MeetingCalendarPage from './pages/MeetingCalendarPage.jsx'
 import MeetingDetailsPage from './pages/MeetingDetailsPage.jsx'
 import MeetingLoginPage from './pages/MeetingLoginPage.jsx'
 import MeetingRegisterPage from './pages/MeetingRegisterPage.jsx'
+import OrganizationHierarchyPage from './pages/OrganizationHierarchyPage.jsx'
 import { getCurrentMeetingUser, isMeetingAuthenticated, clearMeetingAuth } from './meetingApi.js'
 
 function ProtectedMeetingRoute({ children }) {
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="/" element={<Dashboard refreshKey={refreshKey} />} />
             <Route path="/employees/:empId" element={<EmployeeDetail />} />
             <Route path="/odc-tracker" element={<ODCTracker />} />
+            <Route path="/organization-hierarchy" element={<OrganizationHierarchyPage />} />
 
             <Route path="/meeting-login" element={<MeetingLoginPage onAuthSuccess={() => setMeetingUser(getCurrentMeetingUser())} />} />
             <Route path="/meeting-register" element={<MeetingRegisterPage onAuthSuccess={() => setMeetingUser(getCurrentMeetingUser())} />} />

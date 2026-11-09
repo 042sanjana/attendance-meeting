@@ -9,7 +9,7 @@ import os
 from datetime import date as date_cls, timedelta
 from typing import Optional, List
 from .odc_tracker import router as odc_router
-
+from .organization_hierarchy import router as organization_hierarchy_router
 
 from fastapi import (
     FastAPI,
@@ -41,6 +41,7 @@ app = FastAPI(
 )
 app.include_router(analytics_router) # <-- add this line
 app.include_router(odc_router)
+app.include_router(organization_hierarchy_router)
 
 
 # ============================================================

@@ -1,6 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, UploadCloud, BarChart3, Building2, ClipboardList, Mic, History, CheckSquare, CalendarRange, LogIn, UserPlus, LogOut, UserCircle2 } from 'lucide-react'
+import { LayoutDashboard, Users, UploadCloud, BarChart3, Building2, ClipboardList, Mic, History, CheckSquare, CalendarRange, LogIn, UserPlus, LogOut, UserCircle2, GitBranch } from 'lucide-react'
 import ResetDataButton from './ResetDataButton.jsx'
 
 export default function Sidebar({ onUploadClick, onReset, meetingUser = {}, onMeetingLogout }) {
@@ -22,6 +22,7 @@ export default function Sidebar({ onUploadClick, onReset, meetingUser = {}, onMe
           <span>Dashboard</span>
         </NavLink>
         <NavLink to="/odc-tracker" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><ClipboardList size={18} /><span>ODC Tracker</span></NavLink>
+        <NavLink to="/organization-hierarchy" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><GitBranch size={18} /><span>Hierarchy</span></NavLink>
         <a className="nav-item" href="#employees-section">
           <Users size={18} />
           <span>Employees</span>
