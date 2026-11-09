@@ -1,273 +1,196 @@
-# Attendance Dashboard + AI Meeting Notes
+# Attendance Dashboard + Organization Hierarchy
 
-A full-stack web application that combines:
-- Employee Attendance Dashboard and ODC Tracker
-- AI Meeting Notes processing with audio upload, transcript generation, meeting summaries, task extraction, history tracking, and task calendar management
+This project contains two related modules:
 
-This project keeps the existing attendance dashboard as the main application while integrating the Meeting Notes functionality as a separate module with its own protected auth flow and dedicated backend.
+1. Attendance Dashboard – employee attendance tracking, analytics, ODC tracker, and meeting management
+2. Organization Hierarchy – employee reporting tree, manager relationships, and org chart visualization
 
-## Features
+The organization hierarchy module is also integrated into the dashboard as a separate page in the sidebar.
 
-### Attendance Dashboard
-- Employee attendance dashboard
-- Upload Excel attendance data
-- Attendance analytics and charts
-- Employee management
-- ODC tracker
-- Dashboard refresh and reset support
-- Existing attendance UI and backend remain intact
-
-### AI Meeting Notes
-- Audio upload (`.wav`, `.mp3`, `.m4a`)
-- Whisper speech-to-text transcription
-- BART summary generation
-- Automatic task extraction
-- Meeting history
-- Meeting task tracking
-- Task calendar export and updates
-- Separate meeting authentication
-- Meeting account login/register/logout
-
-## Project Structure
+## Project structure
 
 ```text
 attendance-meeting/
 ├── dashboard-attendance-main/
 │   ├── README.md
 │   ├── backend/
-│   │   ├── app/
-│   │   │   ├── __init__.py
-│   │   │   ├── analytics.py
-│   │   │   ├── database.py
-│   │   │   ├── excel_processor.py
-│   │   │   ├── main.py
-│   │   │   ├── models.py
-│   │   │   ├── odc_tracker.py
-│   │   │   └── schemas.py
-│   │   ├── generate_sample_data.py
-│   │   ├── requirements.txt
-│   │   └── uploads/
-│   ├── frontend/
-│   │   ├── package.json
-│   │   ├── vite.config.js
-│   │   ├── index.html
-│   │   └── src/
-│   │       ├── App.jsx
-│   │       ├── api.js
-│   │       ├── index.css
-│   │       ├── main.jsx
-│   │       ├── meetingApi.js
-│   │       ├── components/
-│   │       └── pages/
-│   └── uploads/
-│
-├── meeting-final-main/
-│   └── meeting-backend-main/
-│       ├── main.py
-│       ├── requirements.txt
-│       ├── security.py
-│       ├── database/
-│       ├── routes/
-│       ├── services/
-│       └── uploads/
-└── README.md (this file)
+│   │   └── app/
+│   └── frontend/
+│       └── src/
+├── organization-hierachy-main/
+│   ├── README.md
+│   ├── organization heirachy/
+│   │   ├── backend/
+│   │   └── ...
+│   └── org frontend/
+│       └── org/
+└── meeting-final-main/
+    └── ...
 ```
 
-## Tech Stack
+## Prerequisites
 
-### Attendance Dashboard
-- React + Vite
-- FastAPI
-- SQLAlchemy
-- SQLite
-- Recharts
-- Lucide React
+Install the following first:
 
-### Meeting Notes
-- React + Vite (integrated into dashboard frontend)
-- FastAPI
-- SQLite
-- Whisper
-- BART summarizer
-- JWT authentication
-- Task extraction and date parsing
-
-## Requirements
-
-- Python 3.10+
-- Node.js 18+
+- Python 3.10 or newer
+- Node.js 18 or newer
 - npm
 - Git
 
-## Installation
-
-### 1) Clone the project
+Check versions:
 
 ```bash
-git clone <repository-url>
-cd attendance-meeting
-dashboard-attendance-main
+python --version
+node -v
+npm -v
 ```
 
-### 2) Install attendance backend dependencies
+## 1) Run the Attendance Dashboard
+
+### Backend
+
+Open a terminal and run:
 
 ```bash
-cd backend
-python -m venv venv
-```
-
-Windows PowerShell:
-```powershell
-.\venv\Scripts\Activate.ps1
+cd "C:\Users\sanjanavinu.kannan\Downloads\attendance-meeting\dashboard-attendance-main (1)\dashboard-attendance-main\backend"
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Windows Command Prompt:
-```cmd
-venv\Scripts\activate.bat
-pip install -r requirements.txt
-```
+The backend will run at:
 
-macOS/Linux:
-```bash
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 3) Start attendance backend
-
-```bash
-python -m uvicorn app.main:app --reload --port 8000
-```
-
-Attendance backend runs at:
 - http://localhost:8000
-- Swagger UI: http://localhost:8000/docs
+- API docs: http://localhost:8000/docs
 
-### 4) Install meeting backend dependencies
+### Frontend
 
 Open a second terminal and run:
 
 ```bash
-cd ..\meeting-final-main\meeting-backend-main\meeting-backend-main
-python -m venv venv
-```
-
-Windows PowerShell:
-```powershell
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-Windows Command Prompt:
-```cmd
-venv\Scripts\activate.bat
-pip install -r requirements.txt
-```
-
-macOS/Linux:
-```bash
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 5) Start meeting backend
-
-```bash
-python -m uvicorn main:app --reload --port 8001
-```
-
-Meeting backend runs at:
-- http://localhost:8001
-- Swagger UI: http://localhost:8001/docs
-
-### 6) Install frontend dependencies
-
-Open a third terminal and run:
-
-```bash
-cd ..\dashboard-attendance-main\frontend
+cd "C:\Users\sanjanavinu.kannan\Downloads\attendance-meeting\dashboard-attendance-main (1)\dashboard-attendance-main\frontend"
 npm install
-```
-
-### 7) Start the dashboard frontend
-
-```bash
 npm run dev -- --host 0.0.0.0
 ```
 
-Frontend runs at:
+The dashboard will run at:
+
 - http://localhost:5173
 
-## Running the Full Application
+The integrated Organization Hierarchy page is available from the sidebar inside this dashboard.
 
-You must keep all three services running at the same time:
+## 2) Run the Organization Hierarchy Module (Standalone)
 
-1. Attendance backend on port 8000
-2. Meeting backend on port 8001
-3. Dashboard frontend on port 5173
+If you want to run the original hierarchy project separately, use the following commands.
 
-## Meeting Notes Login / Registration
+### Backend
 
-The meeting notes module has its own authentication system and JWT token storage. This is separate from the attendance dashboard login system.
-
-Use the Meeting Account section in the sidebar to:
-- Login
-- Register
-- Logout
-
-After successful login or registration:
-- the meeting JWT token is stored locally
-- meeting user details are stored locally
-- protected meeting pages are available
-- unauthenticated users are redirected to the meeting login page
-
-## Important Notes
-
-- Attendance dashboard app remains the main application
-- Meeting functionality is integrated into the same dashboard frontend
-- Meeting backend uses a separate database from the attendance backend
-- Attendance authentication remains separate from meeting authentication
-- Do not delete or overwrite working attendance features
-
-## Useful Commands
-
-### Attendance backend
 ```bash
-cd backend
-python -m uvicorn app.main:app --reload --port 8000
+cd "C:\Users\sanjanavinu.kannan\Downloads\attendance-meeting\organization-hierachy-main\organization heirachy\backend"
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Meeting backend
-```bash
-cd meeting-final-main/meeting-backend-main/meeting-backend-main
-python -m uvicorn main:app --reload --port 8001
-```
+This backend runs at:
+
+- http://localhost:8000
 
 ### Frontend
+
+Open another terminal and run:
+
 ```bash
-cd dashboard-attendance-main/frontend
+cd "C:\Users\sanjanavinu.kannan\Downloads\attendance-meeting\organization-hierachy-main\org frontend\org"
+npm install
+npm start
+```
+
+The standalone hierarchy UI runs at:
+
+- http://localhost:3000
+
+## 3) Local development flow
+
+For the full dashboard experience, run these together:
+
+1. Dashboard backend on port 8000
+2. Dashboard frontend on port 5173
+3. Keep the hierarchy page from the sidebar and upload Excel files from the dashboard UI
+
+If you want the original standalone hierarchy app, run:
+
+1. Organization hierarchy backend on port 8000
+2. Organization hierarchy frontend on port 3000
+
+## Important notes
+
+- The dashboard backend and the standalone hierarchy backend both use FastAPI and can run on the same port only one at a time.
+- The integrated dashboard page is the recommended way to use the hierarchy feature inside the HR dashboard.
+- If you run the standalone org app and dashboard app together, use different ports or stop one before starting the other.
+
+## Useful commands summary
+
+### Dashboard backend
+
+```bash
+cd "C:\Users\sanjanavinu.kannan\Downloads\attendance-meeting\dashboard-attendance-main (1)\dashboard-attendance-main\backend"
+.venv\Scripts\activate
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### Dashboard frontend
+
+```bash
+cd "C:\Users\sanjanavinu.kannan\Downloads\attendance-meeting\dashboard-attendance-main (1)\dashboard-attendance-main\frontend"
+npm install
 npm run dev -- --host 0.0.0.0
+```
+
+### Organization hierarchy backend
+
+```bash
+cd "C:\Users\sanjanavinu.kannan\Downloads\attendance-meeting\organization-hierachy-main\organization heirachy\backend"
+.venv\Scripts\activate
+uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### Organization hierarchy frontend
+
+```bash
+cd "C:\Users\sanjanavinu.kannan\Downloads\attendance-meeting\organization-hierachy-main\org frontend\org"
+npm install
+npm start
 ```
 
 ## Troubleshooting
 
-### If dependencies are missing
+### If pip install fails
+
 ```bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
+```
+
+### If npm install fails
+
+```bash
+npm cache clean --force
 npm install
 ```
 
-### If ports are already in use
-Change the port in the uvicorn command:
+### If a port is already in use
+
+Change the port in the command:
+
 ```bash
-python -m uvicorn app.main:app --reload --port 8000
-python -m uvicorn main:app --reload --port 8001
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-### If frontend does not load
-Ensure the backend services are running before opening the app in the browser.
+or update the frontend dev server port if needed.
 
-## License
+## Final note
 
-This project is intended for internal use and development.
+Use the dashboard UI as the main application for daily work. The standalone organization hierarchy project is included as a separate module and can also be run independently when needed.
