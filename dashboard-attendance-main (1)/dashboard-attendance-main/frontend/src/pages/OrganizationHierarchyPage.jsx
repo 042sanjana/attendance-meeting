@@ -2,6 +2,88 @@ import { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 
 const API_BASE = '/api/org'
+const NODE_WIDTH = 220
+const NODE_HEIGHT = 88
+const HORIZONTAL_GAP = 120
+const VERTICAL_GAP = 170
+const TREE_TOP_OFFSET = 30
+const TREE_LEFT_OFFSET = 60
+
+const getNodeKey = (node, fallback = 'node') => {
+  const employee = node?.employee || {}
+  const employeeNumber = employee['EMPLOYEE NUMBER']
+  if (employeeNumber) return String(employeeNumber)
+  return `${fallback}-${employee['EMPLOYEE NAME'] || 'unnamed'}`
+}
+
+const buildVisibleHierarchy = (nodes, collapsedNodes) => {
+  const walk = (items) =>
+    items.map((node) => {
+      const employeeNumber = String(node?.employee?.['EMPLOYEE NUMBER'] || '')
+      const isCollapsed = employeeNumber && collapsedNodes.has(employeeNumber)
+
+      return {
+        ...node,
+        children: isCollapsed ? [] : walk(node?.children || []),
+      }
+    })
+
+  return walk(nodes)
+}
+
+const getSubtreeWidth = (node) => {
+  const children = node.children || []
+  if (!children.length) return NODE_WIDTH
+
+  const totalChildWidth = children.reduce((sum, child) => sum + getSubtreeWidth(child), 0)
+  return totalChildWidth + (children.length - 1) * HORIZONTAL_GAP
+}
+
+const layoutTree = (nodes) => {
+  const flatNodes = []
+
+  const placeNode = (node, depth, startX, fallbackKey) => {
+    const key = getNodeKey(node, fallbackKey)
+    const subtreeWidth = getSubtreeWidth(node)
+    const centerX = startX + subtreeWidth / 2
+    const y = depth * VERTICAL_GAP + TREE_TOP_OFFSET
+
+    flatNodes.push({
+      ...node.employee,
+      _key: key,
+      _depth: depth,
+      _x: centerX,
+      _y: y,
+      _childrenCount: node.children?.length || 0,
+    })
+
+    if (!node.children?.length) return
+
+    let childStartX = startX
+    node.children.forEach((child, index) => {
+      const childKey = getNodeKey(child, `${key}-child-${index}`)
+      placeNode(child, depth + 1, childStartX, childKey)
+      childStartX += getSubtreeWidth(child) + HORIZONTAL_GAP
+    })
+  }
+
+  let cursorX = TREE_LEFT_OFFSET
+  nodes.forEach((node, index) => {
+    placeNode(node, 0, cursorX, `root-${index}`)
+    cursorX += getSubtreeWidth(node) + HORIZONTAL_GAP
+  })
+
+  const totalWidth = Math.max(
+    ...flatNodes.map((node) => node._x + NODE_WIDTH / 2 + TREE_LEFT_OFFSET),
+    0,
+  ) + 80
+  const totalHeight = Math.max(
+    ...flatNodes.map((node) => node._y + NODE_HEIGHT + 40),
+    420,
+  )
+
+  return { flatNodes, totalWidth, totalHeight }
+}
 
 function OrganizationHierarchyPage() {
   const [hierarchy, setHierarchy] = useState([])
@@ -35,17 +117,90 @@ function OrganizationHierarchyPage() {
     setCollapsedNodes(new Set(collectHierarchyIds(hierarchy)))
   }
 
+  const visibleHierarchy = useMemo(
+    () => buildVisibleHierarchy(hierarchy, collapsedNodes),
+    [hierarchy, collapsedNodes],
+  )
+
+  const treeLayout = useMemo(() => layoutTree(visibleHierarchy), [visibleHierarchy])
+
+  const findNodeByEmployeeNumber = (nodes, employeeNumber) => {
+    if (!employeeNumber) return null
+
+    const stack = [...nodes]
+    while (stack.length) {
+      const node = stack.pop()
+      if (String(node?.employee?.['EMPLOYEE NUMBER']) === String(employeeNumber)) {
+        return node
+      }
+      if (node?.children?.length) {
+        stack.push(...node.children)
+      }
+    }
+
+    return null
+  }
+
+  const getChildrenCountForEmployee = (employeeNumber) => {
+    const node = findNodeByEmployeeNumber(hierarchy, employeeNumber)
+    return node?.children?.length || 0
+  }
+
   const toggleNode = (employeeNumber) => {
+    const node = findNodeByEmployeeNumber(hierarchy, employeeNumber)
+    if (!node || !node.children?.length) return
+
     setCollapsedNodes((prev) => {
       const next = new Set(prev)
-      if (next.has(String(employeeNumber))) {
-        next.delete(String(employeeNumber))
+      const key = String(employeeNumber)
+      if (next.has(key)) {
+        next.delete(key)
       } else {
-        next.add(String(employeeNumber))
+        next.add(key)
       }
       return next
     })
   }
+
+  const nodeMap = useMemo(() => {
+    const map = new Map()
+    treeLayout.flatNodes.forEach((employee) => {
+      map.set(String(employee._key), { x: employee._x, y: employee._y })
+    })
+    return map
+  }, [treeLayout.flatNodes])
+
+  const connectors = useMemo(() => {
+    const paths = []
+
+    const walk = (node, parent = null) => {
+      if (!node) return
+
+      if (parent) {
+        const parentKey = getNodeKey(parent, 'parent')
+        const childKey = getNodeKey(node, 'child')
+        const parentPos = nodeMap.get(parentKey)
+        const childPos = nodeMap.get(childKey)
+
+        if (parentPos && childPos) {
+          const startX = parentPos.x
+          const startY = parentPos.y + NODE_HEIGHT
+          const endX = childPos.x
+          const endY = childPos.y
+          const midY = startY + (endY - startY) / 2
+
+          paths.push(`M ${startX} ${startY} V ${midY} H ${endX} V ${endY}`)
+        }
+      }
+
+      if (node.children?.length) {
+        node.children.forEach((child) => walk(child, node))
+      }
+    }
+
+    visibleHierarchy.forEach((root) => walk(root))
+    return paths
+  }, [nodeMap, visibleHierarchy])
 
   const flattenEmployees = useMemo(() => {
     const employees = []
@@ -106,50 +261,58 @@ function OrganizationHierarchyPage() {
     }
   }
 
-  const renderNode = (node, level = 0) => {
-    const employee = node.employee || {}
+  const renderNode = (employee) => {
     const employeeNumber = employee['EMPLOYEE NUMBER']
-    const childCount = node.children?.length || 0
+    const childCount = getChildrenCountForEmployee(employeeNumber)
     const hasChildren = childCount > 0
     const isCollapsed = hasChildren && collapsedNodes.has(String(employeeNumber))
+    const isSelected = selectedEmployee?.['EMPLOYEE NUMBER'] === employeeNumber
 
     return (
-      <div key={employeeNumber || `node-${level}`} className="org-tree-node-wrap" style={{ marginLeft: level * 18 }}>
-        <div className="org-tree-row">
-          {level > 0 && <span className="tree-connector" aria-hidden="true" />}
-          {hasChildren && (
-            <button
-              type="button"
-              className="org-toggle-btn"
-              onClick={() => toggleNode(employeeNumber)}
-              aria-label={isCollapsed ? `Expand ${employee['EMPLOYEE NAME']}` : `Collapse ${employee['EMPLOYEE NAME']}`}
-            >
-              {isCollapsed ? '▸' : '▾'}
-            </button>
-          )}
-          {!hasChildren && <span className="org-toggle-placeholder" aria-hidden="true" />}
+      <div
+        key={employee._key}
+        className="org-node-shell"
+        style={{
+          left: `${employee._x - NODE_WIDTH / 2}px`,
+          top: `${employee._y}px`,
+        }}
+      >
+        {hasChildren && (
           <button
             type="button"
-            className={`org-tree-node ${selectedEmployee?.['EMPLOYEE NUMBER'] === employeeNumber ? 'selected' : ''}`}
-            onClick={() => setSelectedEmployee(employee)}
+            className="org-toggle-btn"
+            aria-expanded={!isCollapsed}
+            onClick={(event) => {
+              event.stopPropagation()
+              toggleNode(employeeNumber)
+            }}
+            aria-label={isCollapsed ? `Expand ${employee['EMPLOYEE NAME']}` : `Collapse ${employee['EMPLOYEE NAME']}`}
           >
-            <div className="org-avatar">
-              <img src={employee.PROFILE || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} alt={employee['EMPLOYEE NAME']} />
-            </div>
-            <div className="org-node-details">
-              <strong>{employee['EMPLOYEE NAME'] || 'Unnamed Employee'}</strong>
-              <span>{employee.DESIGNATION || 'No designation'}</span>
-              <small>{employeeNumber || 'N/A'}</small>
-            </div>
-            {hasChildren && <span className="org-child-count">{childCount}</span>}
+            {isCollapsed ? '▸' : '▾'}
           </button>
-        </div>
-
-        {hasChildren && !isCollapsed && (
-          <div className="org-tree-children">
-            {node.children.map((child) => renderNode(child, level + 1))}
-          </div>
         )}
+        {!hasChildren && <span className="org-toggle-placeholder" aria-hidden="true" />}
+
+        <button
+          type="button"
+          className={`org-tree-node ${isSelected ? 'selected' : ''}`}
+          onClick={() => setSelectedEmployee(employee)}
+        >
+          <div className="org-avatar">
+            <img
+              src={employee.PROFILE || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}
+              alt={employee['EMPLOYEE NAME']}
+            />
+          </div>
+
+          <div className="org-node-details">
+            <strong>{employee['EMPLOYEE NAME'] || 'Unnamed Employee'}</strong>
+            <span>{employee.DESIGNATION || 'No designation'}</span>
+            <small>{employeeNumber || 'N/A'}</small>
+          </div>
+
+          {hasChildren && <span className="org-child-count">{childCount}</span>}
+        </button>
       </div>
     )
   }
@@ -159,7 +322,7 @@ function OrganizationHierarchyPage() {
       <div className="org-page-header">
         <div>
           <h1>Organization Hierarchy</h1>
-          <p>Upload an Excel sheet to build the reporting structure and visualize the organization tree.</p>
+          <p>CEO at the top, managers in the next level, and their teams below in a traditional top-down hierarchy.</p>
         </div>
       </div>
 
@@ -183,8 +346,29 @@ function OrganizationHierarchyPage() {
       <div className="org-layout">
         <div className="org-panel">
           <div className="org-panel-header">Hierarchy Tree</div>
-          {hierarchy.length > 0 ? (
-            <div className="org-tree-view">{hierarchy.map((node) => renderNode(node))}</div>
+          {visibleHierarchy.length > 0 ? (
+            <div className="org-tree-scroll">
+              <div
+                className="org-tree-canvas"
+                style={{
+                  width: `${treeLayout.totalWidth}px`,
+                  height: `${treeLayout.totalHeight}px`,
+                }}
+              >
+                <svg
+                  className="org-tree-links"
+                  width={treeLayout.totalWidth}
+                  height={treeLayout.totalHeight}
+                  preserveAspectRatio="xMinYMin meet"
+                >
+                  {connectors.map((path, index) => (
+                    <path key={`connector-${index}`} d={path} />
+                  ))}
+                </svg>
+
+                {treeLayout.flatNodes.map((employee) => renderNode(employee))}
+              </div>
+            </div>
           ) : (
             <div className="org-empty-state">No organization data loaded yet.</div>
           )}
