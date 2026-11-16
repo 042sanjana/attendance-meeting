@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import dagre from "dagre";
 
@@ -187,6 +187,34 @@ function OrgChart() {
 
   const [highlightedEmployees, setHighlightedEmployees] =
     useState([]);
+
+  const [employeeFilter, setEmployeeFilter] = useState("");
+
+  const flattenEmployees = useCallback(() => {
+    const results = [];
+    const stack = [...rawData];
+
+    while (stack.length) {
+      const node = stack.pop();
+      results.push(node.employee);
+      if (node.children?.length) {
+        stack.push(...node.children);
+      }
+    }
+
+    return results;
+  }, [rawData]);
+
+  const filteredEmployees = useMemo(() => {
+    const query = employeeFilter.trim().toLowerCase();
+    if (!query) return flattenEmployees();
+
+    return flattenEmployees().filter((emp) => {
+      const name = String(emp["EMPLOYEE NAME"] || "").toLowerCase();
+      const number = String(emp["EMPLOYEE NUMBER"] || "").toLowerCase();
+      return name.includes(query) || number.includes(query);
+    });
+  }, [employeeFilter, flattenEmployees]);
 
   // ===================================================
   // Upload Excel
@@ -776,6 +804,36 @@ function OrgChart() {
 
           <h2>👤 Employee Details</h2>
 
+          {rawData.length > 0 && (
+            <div className="employee-filter-box">
+              <input
+                type="text"
+                placeholder="Search employee by name or number"
+                value={employeeFilter}
+                onChange={(e) => setEmployeeFilter(e.target.value)}
+              />
+
+              {filteredEmployees.length > 0 && (
+                <div className="employee-filter-list">
+                  {filteredEmployees.slice(0, 6).map((emp) => (
+                    <button
+                      key={emp["EMPLOYEE NUMBER"]}
+                      type="button"
+                      className="employee-filter-item"
+                      onClick={() => {
+                        setSelectedEmployee(emp);
+                        setEmployeeFilter("");
+                      }}
+                    >
+                      <span>{emp["EMPLOYEE NAME"]}</span>
+                      <small>{emp["EMPLOYEE NUMBER"]}</small>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {selectedEmployee ? (
 
             <>
@@ -863,6 +921,16 @@ function OrgChart() {
                 Click a manager again to expand/collapse
                 their team.
               </p>
+
+              {rawData.length > 0 && (
+                <button
+                  className="view-btn"
+                  style={{ marginTop: 20 }}
+                  onClick={() => setShowAddModal(true)}
+                >
+                  Add Employee
+                </button>
+              )}
 
             </div>
 

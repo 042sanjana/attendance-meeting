@@ -1,11 +1,9 @@
-<<<<<<< HEAD
 # Attendance Dashboard + Organization Hierarchy
 
 This project contains two related modules:
 
 1. Attendance Dashboard – employee attendance tracking, analytics, ODC tracker, and meeting management
 2. Organization Hierarchy – employee reporting tree, manager relationships, and org chart visualization
-=======
 # Attendance Dashboard + Meeting Notes + Hierarchy
 
 A complete employee management and productivity platform that combines:
@@ -48,7 +46,6 @@ The project includes:
    - manager/subordinate relationships
    - org chart style data display
    - integrated hierarchy page in the main dashboard
->>>>>>> c2af2e1 (updated)
 
 The organization hierarchy module is also integrated into the dashboard as a separate page in the sidebar.
 
@@ -157,22 +154,16 @@ attendance-meeting/
 
 ## Prerequisites
 
-<<<<<<< HEAD
 Install the following first:
-=======
 Install the following before running the project:
->>>>>>> c2af2e1 (updated)
 
 - Python 3.10 or newer
 - Node.js 18 or newer
 - npm
 - Git
 
-<<<<<<< HEAD
 Check versions:
-=======
 Verify that everything is installed:
->>>>>>> c2af2e1 (updated)
 
 ```bash
 python --version
@@ -180,7 +171,6 @@ node -v
 npm -v
 ```
 
-<<<<<<< HEAD
 ## 1) Run the Attendance Dashboard
 
 ### Backend
@@ -201,7 +191,6 @@ The backend will run at:
 - API docs: http://localhost:8000/docs
 
 ### Frontend
-=======
 ## Quick Start
 
 The project has multiple services. Run them in separate terminals.
@@ -255,12 +244,10 @@ The dashboard backend will run at:
 - Swagger docs: http://localhost:8000/docs
 
 ## 2) Start the Attendance Dashboard Frontend
->>>>>>> c2af2e1 (updated)
 
 Open a second terminal and run:
 
 ```bash
-<<<<<<< HEAD
 cd "C:\Users\sanjanavinu.kannan\Downloads\attendance-meeting\dashboard-attendance-main (1)\dashboard-attendance-main\frontend"
 npm install
 npm run dev -- --host 0.0.0.0
@@ -339,7 +326,6 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 cd "C:\Users\sanjanavinu.kannan\Downloads\attendance-meeting\dashboard-attendance-main (1)\dashboard-attendance-main\frontend"
 npm install
 npm run dev -- --host 0.0.0.0
-=======
 cd "dashboard-attendance-main (1)\dashboard-attendance-main\frontend"
 npm install
 npm run dev -- --host 0.0.0.0
@@ -495,7 +481,6 @@ uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 cd "organization-hierachy-main\org frontend\org"
 npm install
 npm start
->>>>>>> c2af2e1 (updated)
 ```
 
 ### Organization hierarchy backend
@@ -516,22 +501,16 @@ npm start
 
 ## Troubleshooting
 
-<<<<<<< HEAD
 ### If pip install fails
-=======
 ### If `pip install` fails
->>>>>>> c2af2e1 (updated)
 
 ```bash
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-<<<<<<< HEAD
 ### If npm install fails
-=======
 ### If `npm install` fails
->>>>>>> c2af2e1 (updated)
 
 ```bash
 npm cache clean --force
@@ -546,13 +525,11 @@ Change the port in the command:
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-<<<<<<< HEAD
 or update the frontend dev server port if needed.
 
 ## Final note
 
 Use the dashboard UI as the main application for daily work. The standalone organization hierarchy project is included as a separate module and can also be run independently when needed.
-=======
 ### If the frontend does not open
 
 Check whether the app is still running in the terminal and confirm the correct port:
@@ -575,4 +552,3 @@ After starting the services:
 This project is a practical HR and operations dashboard that brings together attendance, hierarchy, and AI meeting note management in a single workspace. It is designed to help teams monitor workforce activity, manage reporting lines, and convert meeting conversations into actionable tasks.
 
 For day-to-day work, the main dashboard is the recommended interface. The standalone hierarchy project is included as an optional module when a separate org chart app is needed.
->>>>>>> c2af2e1 (updated)
