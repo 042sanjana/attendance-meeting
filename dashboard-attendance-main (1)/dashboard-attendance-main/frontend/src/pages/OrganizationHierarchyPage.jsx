@@ -9,6 +9,20 @@ const VERTICAL_GAP = 170
 const TREE_TOP_OFFSET = 30
 const TREE_LEFT_OFFSET = 60
 
+const getAutoProfileForGender = (gender, currentProfile = '') => {
+  const normalized = String(gender || '').trim().toLowerCase()
+
+  if (normalized === 'female') {
+    return 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png'
+  }
+
+  if (normalized === 'male') {
+    return 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
+  }
+
+  return currentProfile || ''
+}
+
 const emptyEmployeeForm = {
   'EMPLOYEE NUMBER': '',
   'EMPLOYEE NAME': '',
@@ -250,7 +264,7 @@ function OrganizationHierarchyPage() {
         .toLowerCase()
 
       return searchable.includes(searchTerm)
-    })
+    }, [])
   }, [employeeSearch, flattenEmployees])
 
   const loadHierarchy = async () => {
@@ -284,7 +298,7 @@ function OrganizationHierarchyPage() {
       LOCATION: selectedEmployee.LOCATION || '',
       GENDER: selectedEmployee.GENDER || '',
       'EMAIL ADDRESS': selectedEmployee['EMAIL ADDRESS'] || '',
-      PROFILE: selectedEmployee.PROFILE || '',
+      PROFILE: selectedEmployee.PROFILE || getAutoProfileForGender(selectedEmployee.GENDER),
       'DATE OF JOINING': selectedEmployee['DATE OF JOINING'] || '',
     })
     setIsEmployeeModalOpen(true)
@@ -297,10 +311,28 @@ function OrganizationHierarchyPage() {
   }
 
   const handleEmployeeFormChange = (field, value) => {
-    setEmployeeForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
+    setEmployeeForm((prev) => {
+      if (field === 'GENDER') {
+        const previousGender = String(prev.GENDER || '').trim().toLowerCase()
+        const previousProfile = prev.PROFILE || ''
+        const defaultPreviousProfile = getAutoProfileForGender(previousGender)
+        const shouldReplaceProfile =
+          !previousProfile ||
+          previousProfile === defaultPreviousProfile ||
+          previousProfile === getAutoProfileForGender(previousGender, previousProfile)
+
+        return {
+          ...prev,
+          GENDER: value,
+          PROFILE: shouldReplaceProfile ? getAutoProfileForGender(value, previousProfile) : previousProfile,
+        }
+      }
+
+      return {
+        ...prev,
+        [field]: value,
+      }
+    })
   }
 
   const submitEmployeeForm = async (event) => {
@@ -579,12 +611,6 @@ function OrganizationHierarchyPage() {
           </div>
         </div>
       </div>
-
-      {flattenEmployees.length > 0 && (
-        <div className="org-employee-summary">
-          <strong>{flattenEmployees.length}</strong> employees in hierarchy
-        </div>
-      )}
 
       {isEmployeeModalOpen && (
         <div className="org-modal-overlay" onClick={closeEmployeeForm}>
