@@ -22,7 +22,9 @@ def attendance_node(state: ChatState):
     if "attendance" not in state.get("selected_modules", []):
         return {}
 
-    result = run_attendance_agent(state["question"])
+    result = safe_agent(
+        run_attendance_agent, state["question"], "attendance"
+    )
 
     return {
         "attendance_result": result,
@@ -33,7 +35,9 @@ def hierarchy_node(state: ChatState):
     if "hierarchy" not in state.get("selected_modules", []):
         return {}
 
-    result = run_hierarchy_agent(state["question"])
+    result = safe_agent(
+           run_attendance_agent, state["question"], "attendance"
+       )
 
     return {
         "hierarchy_result": result,
@@ -44,7 +48,9 @@ def odc_node(state: ChatState):
     if "odc" not in state.get("selected_modules", []):
         return {}
 
-    result = run_odc_agent(state["question"])
+     result = safe_agent(
+            run_attendance_agent, state["question"], "attendance"
+        )
 
     return {
         "odc_result": result,
@@ -55,7 +61,9 @@ def meeting_node(state: ChatState):
     if "meeting" not in state.get("selected_modules", []):
         return {}
 
-    result = run_meeting_agent(state["question"])
+     result = safe_agent(
+            run_attendance_agent, state["question"], "attendance"
+        )
 
     rag_result = run_rag_agent(state["question"])
 
@@ -100,7 +108,19 @@ def analyst_node(state: ChatState):
     return {
         "answer": answer,
     }
-
+def safe agent(agent_fuction,question,module):
+    try:
+        return agent_function(question)
+    except Exception as exc:
+        return{
+            "module": module,
+            "error": str(exc),
+            "data": {
+                "columns": [],
+                "rows": [],
+                "row_count": 0,
+            }
+        }
 
 def build_workflow():
     graph = StateGraph(ChatState)

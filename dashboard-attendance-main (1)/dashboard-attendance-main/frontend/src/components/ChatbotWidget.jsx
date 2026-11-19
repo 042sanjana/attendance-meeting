@@ -1,7 +1,8 @@
+
 import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { Bot, Send, Sparkles, X, Mic, Square } from 'lucide-react'
-import { getCurrentMeetingUser, getMeetingToken } from '../meetingApi'
+import { getMeetingToken } from '../meetingApi'
 
 const starters = [
   'Show the latest attendance summary',
@@ -15,68 +16,123 @@ export default function ChatbotWidget() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [conversationId] = useState(() => `workforce-${Date.now()}`)
+
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'I can answer questions across attendance, hierarchy, meeting notes and ODC tracker.' },
+    {
+      role: 'assistant',
+      content:
+        'I can answer questions across attendance, hierarchy, meeting notes and ODC tracker.',
+    },
   ])
+
   const [isRecording, setIsRecording] = useState(false)
+
   const scrollRef = useRef(null)
   const recorderRef = useRef(null)
   const streamRef = useRef(null)
   const chunksRef = useRef([])
 
   useEffect(() => {
-    if (open && scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    if (open && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
   }, [messages, open, loading])
 
+  // Send a text question to the chatbot
   const sendMessage = async (question) => {
     const text = (typeof question === 'string' ? question : message).trim()
+
     if (!text || loading) return
 
     setMessage('')
-    setMessages((current) => [...current, { role: 'user', content: text }])
+
+    setMessages((current) => [
+      ...current,
+      { role: 'user', content: text },
+    ])
+
     setLoading(true)
 
     try {
-      const meetingUser = getCurrentMeetingUser()
       const token = getMeetingToken()
-      const response = await axios.post('/api/chatbot/chat', {
-        message: text,
-        session_id: conversationId,
-      }, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
 
-      setMessages((current) => [...current, {
-        role: 'assistant',
-        content: response.data.answer,
-        sources: response.data.sources || [],
-        reportingPeriod: response.data.reporting_period,
-        chart: response.data.chart,
-      }])
+      const response = await axios.post(
+        '/api/chatbot/chat',
+        {
+          message: text,
+          session_id: conversationId,
+        },
+        {
+          headers: token
+            ? { Authorization: `Bearer ${token}` }
+            : {},
+        }
+      )
+
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          content: response.data.answer || 'No answer was returned.',
+          sources: response.data.sources || [],
+          reportingPeriod: response.data.reporting_period,
+          chart: response.data.chart,
+        },
+      ])
     } catch (error) {
+      console.error('Chatbot error:', error)
+
       const detail = error?.response?.data?.detail
-      setMessages((current) => [...current, {
-        role: 'assistant',
-        content: typeof detail === 'string' ? detail : 'I could not retrieve the workspace data. Please try again.',
-      }])
+
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          content:
+            typeof detail === 'string'
+              ? detail
+              : 'I could not retrieve the workspace data. Please try again.',
+        },
+      ])
     } finally {
       setLoading(false)
     }
   }
 
+  // Render chart returned by backend
   const renderChart = (chart) => {
     if (!chart?.labels?.length) return null
+
     const rawValues = chart.series?.[0]?.values || []
-    const values = rawValues.map((value) => typeof value === 'number' ? value : 0)
+
+    const values = rawValues.map((value) =>
+      typeof value === 'number' ? value : 0
+    )
+
     const maximum = Math.max(...values, 1)
 
     return (
       <div className="chatbot-chart">
         {chart.title && <strong>{chart.title}</strong>}
+
         {chart.labels.map((label, index) => (
-          <div className="chatbot-chart-row" key={`${label}-${index}`}>
+          <div
+            className="chatbot-chart-row"
+            key={`${label}-${index}`}
+          >
             <span>{label}</span>
-            <div><i style={{ width: `${Math.max(6, ((values[index] || 0) / maximum) * 100)}%` }} /></div>
+
+            <div>
+              <i
+                style={{
+                  width: `${Math.max(
+                    6,
+                    ((values[index] || 0) / maximum) * 100
+                  )}%`,
+                }}
+              />
+            </div>
+
             <b>{rawValues[index] ?? 0}</b>
           </div>
         ))}
@@ -84,76 +140,192 @@ export default function ChatbotWidget() {
     )
   }
 
+  // Convert source objects into readable labels
+  const formatSources = (sources) => {
+    if (!Array.isArray(sources)) return []
+
+    return sources
+      .map((source) => {
+        if (typeof source === 'string') {
+          return source
+        }
+
+        if (source && typeof source === 'object') {
+          return (
+            source.description ||
+            source.label ||
+            source.name ||
+            source.module ||
+            source.source ||
+            null
+          )
+        }
+
+        return null
+      })
+      .filter(Boolean)
+  }
+
+  // Stop microphone recording
   const stopRecording = () => {
-    if (recorderRef.current && recorderRef.current.state !== 'inactive') {
+    if (
+      recorderRef.current &&
+      recorderRef.current.state !== 'inactive'
+    ) {
       recorderRef.current.stop()
     }
   }
 
+  // Start microphone recording
   const startRecording = async () => {
     try {
-      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-        throw new Error('Audio recording is not supported in this browser.')
+      if (
+        !navigator.mediaDevices?.getUserMedia ||
+        !window.MediaRecorder
+      ) {
+        throw new Error(
+          'Audio recording is not supported in this browser.'
+        )
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       })
+
       streamRef.current = stream
       chunksRef.current = []
 
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      const mimeType = MediaRecorder.isTypeSupported(
+        'audio/webm;codecs=opus'
+      )
         ? 'audio/webm;codecs=opus'
         : 'audio/webm'
+
       const recorder = new MediaRecorder(stream, { mimeType })
+
       recorderRef.current = recorder
 
       recorder.ondataavailable = (event) => {
-        if (event.data?.size) chunksRef.current.push(event.data)
+        if (event.data?.size) {
+          chunksRef.current.push(event.data)
+        }
       }
 
       recorder.onstop = async () => {
-        streamRef.current?.getTracks().forEach((track) => track.stop())
+        streamRef.current?.getTracks().forEach((track) => {
+          track.stop()
+        })
+
         streamRef.current = null
         setIsRecording(false)
 
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' })
+        const blob = new Blob(chunksRef.current, {
+          type: recorder.mimeType || 'audio/webm',
+        })
+
         if (!blob.size) {
-          setMessages((current) => [...current, { role: 'assistant', content: 'No audio was captured. Please record again.' }])
+          setMessages((current) => [
+            ...current,
+            {
+              role: 'assistant',
+              content:
+                'No audio was captured. Please record again.',
+            },
+          ])
           return
         }
 
         const formData = new FormData()
-        formData.append('file', blob, `live-meeting-${Date.now()}.webm`)
+
+        formData.append(
+          'file',
+          blob,
+          `live-meeting-${Date.now()}.webm`
+        )
+
         setLoading(true)
 
         try {
-          const response = await axios.post('/api/chatbot/audio/process', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          })
+          const response = await axios.post(
+            '/api/chatbot/audio/process',
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            }
+          )
+
           const data = response.data
+
           const transcript = data.transcript || ''
           const summary = data.summary
           const decisions = data.decisions || []
           const tasks = data.tasks || []
 
-          const sections = [`Live meeting transcript processed.`,]
-          if (summary) sections.push(`Summary: ${summary}`)
-          if (decisions.length) sections.push(`Decisions: ${decisions.join('; ')}`)
-          if (tasks.length) sections.push(`Tasks: ${tasks.map((task) => `${task.owner || 'Unknown'} — ${task.task || 'Unspecified'}`).join('; ')}`)
-          if (transcript) sections.push(`Transcript: ${transcript.slice(0, 1600)}${transcript.length > 1600 ? '...' : ''}`)
+          const sections = ['Live meeting transcript processed.']
 
-          setMessages((current) => [...current, {
-            role: 'assistant',
-            content: sections.join('\n\n'),
-            sources: ['Whisper transcription', 'Meeting processor'],
-          }])
+          if (summary) {
+            sections.push(`Summary: ${summary}`)
+          }
+
+          if (decisions.length) {
+            sections.push(
+              `Decisions: ${decisions.join('; ')}`
+            )
+          }
+
+          if (tasks.length) {
+            sections.push(
+              `Tasks: ${tasks
+                .map(
+                  (task) =>
+                    `${task.owner || 'Unknown'} — ${
+                      task.task || 'Unspecified'
+                    }`
+                )
+                .join('; ')}`
+            )
+          }
+
+          if (transcript) {
+            sections.push(
+              `Transcript: ${transcript.slice(0, 1600)}${
+                transcript.length > 1600 ? '...' : ''
+              }`
+            )
+          }
+
+          setMessages((current) => [
+            ...current,
+            {
+              role: 'assistant',
+              content: sections.join('\n\n'),
+              sources: [
+                'Whisper transcription',
+                'Meeting processor',
+              ],
+            },
+          ])
         } catch (error) {
+          console.error('Audio processing error:', error)
+
           const detail = error?.response?.data?.detail
-          setMessages((current) => [...current, {
-            role: 'assistant',
-            content: typeof detail === 'string' ? detail : 'The live recording could not be processed.',
-          }])
+
+          setMessages((current) => [
+            ...current,
+            {
+              role: 'assistant',
+              content:
+                typeof detail === 'string'
+                  ? detail
+                  : 'The live recording could not be processed.',
+            },
+          ])
         } finally {
           setLoading(false)
         }
@@ -162,65 +334,166 @@ export default function ChatbotWidget() {
       recorder.start(1000)
       setIsRecording(true)
     } catch (error) {
-      setMessages((current) => [...current, {
-        role: 'assistant',
-        content: 'Microphone access is unavailable. Please allow microphone permission and try again.',
-      }])
+      console.error('Microphone error:', error)
+
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          content:
+            'Microphone access is unavailable. Please allow microphone permission and try again.',
+        },
+      ])
     }
   }
 
   return (
     <>
       {open && (
-        <aside className="chatbot-panel" aria-label="Workforce AI Assistant">
+        <aside
+          className="chatbot-panel"
+          aria-label="Workforce AI Assistant"
+        >
+          {/* Header */}
           <div className="chatbot-header">
             <div className="chatbot-title">
-              <div className="chatbot-title-icon"><Sparkles size={17} /></div>
-              <div><strong>Workforce Assistant</strong><span>Attendance · Hierarchy · Meetings · ODC</span></div>
+              <div className="chatbot-title-icon">
+                <Sparkles size={17} />
+              </div>
+
+              <div>
+                <strong>Workforce Assistant</strong>
+                <span>
+                  Attendance · Hierarchy · Meetings · ODC
+                </span>
+              </div>
             </div>
-            <button type="button" className="chatbot-close" onClick={() => setOpen(false)} aria-label="Close assistant"><X size={18} /></button>
+
+            <button
+              type="button"
+              className="chatbot-close"
+              onClick={() => setOpen(false)}
+              aria-label="Close assistant"
+            >
+              <X size={18} />
+            </button>
           </div>
 
+          {/* Messages */}
           <div className="chatbot-messages" ref={scrollRef}>
             {messages.map((item, index) => (
-              <div key={`${item.role}-${index}`} className={`chatbot-message ${item.role}`}>
+              <div
+                key={`${item.role}-${index}`}
+                className={`chatbot-message ${item.role}`}
+              >
                 <div className="chatbot-bubble">
-                  {item.content}
+                  <div className="chatbot-message-content">
+                    {item.content}
+                  </div>
+
                   {renderChart(item.chart)}
-                  {item.reportingPeriod && <div className="chatbot-meta">Reporting period: {item.reportingPeriod}</div>}
-                  {item.sources?.length > 0 && <div className="chatbot-meta">Sources: {item.sources.join(', ')}</div>}
+
+                  {item.reportingPeriod && (
+                    <div className="chatbot-meta">
+                      Reporting period: {item.reportingPeriod}
+                    </div>
+                  )}
+
+                  {item.sources?.length > 0 && (
+                    <div className="chatbot-meta">
+                      Sources: {formatSources(item.sources).join(', ')}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
 
-            {loading && <div className="chatbot-message assistant"><div className="chatbot-bubble chatbot-thinking"><span /><span /><span /></div></div>}
+            {/* Loading animation */}
+            {loading && (
+              <div className="chatbot-message assistant">
+                <div className="chatbot-bubble chatbot-thinking">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+            )}
 
+            {/* Starter questions */}
             {messages.length === 1 && (
               <div className="chatbot-starters">
                 {starters.map((question) => (
-                  <button type="button" key={question} onClick={() => sendMessage(question)}>{question}</button>
+                  <button
+                    type="button"
+                    key={question}
+                    onClick={() => sendMessage(question)}
+                  >
+                    {question}
+                  </button>
                 ))}
               </div>
             )}
           </div>
 
-          <form className="chatbot-form" onSubmit={(event) => { event.preventDefault(); sendMessage() }}>
-            <input value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Ask across the workforce system..." aria-label="Chat message" />
+          {/* Input */}
+          <form
+            className="chatbot-form"
+            onSubmit={(event) => {
+              event.preventDefault()
+              sendMessage()
+            }}
+          >
+            <input
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              placeholder="Ask across the workforce system..."
+              aria-label="Chat message"
+            />
+
             <button
               type="button"
-              className={isRecording ? 'chatbot-mic recording' : 'chatbot-mic'}
-              onClick={() => isRecording ? stopRecording() : startRecording()}
-              aria-label={isRecording ? 'Stop recording' : 'Start live meeting recording'}
+              className={
+                isRecording
+                  ? 'chatbot-mic recording'
+                  : 'chatbot-mic'
+              }
+              onClick={() =>
+                isRecording
+                  ? stopRecording()
+                  : startRecording()
+              }
+              aria-label={
+                isRecording
+                  ? 'Stop recording'
+                  : 'Start live meeting recording'
+              }
               disabled={loading}
             >
-              {isRecording ? <Square size={17} /> : <Mic size={17} />}
+              {isRecording ? (
+                <Square size={17} />
+              ) : (
+                <Mic size={17} />
+              )}
             </button>
-            <button type="submit" disabled={!message.trim() || loading} aria-label="Send message"><Send size={17} /></button>
+
+            <button
+              type="submit"
+              disabled={!message.trim() || loading}
+              aria-label="Send message"
+            >
+              <Send size={17} />
+            </button>
           </form>
         </aside>
       )}
 
-      <button type="button" className={`chatbot-fab ${open ? 'active' : ''}`} onClick={() => setOpen((current) => !current)} aria-label="Open Workforce Assistant">
+      {/* Floating chatbot button */}
+      <button
+        type="button"
+        className={`chatbot-fab ${open ? 'active' : ''}`}
+        onClick={() => setOpen((current) => !current)}
+        aria-label="Open Workforce Assistant"
+      >
         {open ? <X size={22} /> : <Bot size={23} />}
       </button>
     </>

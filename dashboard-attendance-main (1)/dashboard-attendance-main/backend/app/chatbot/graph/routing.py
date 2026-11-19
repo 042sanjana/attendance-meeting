@@ -56,6 +56,7 @@ def route_question(question: str) -> list[str]:
 
     # General meeting-related questions should search meeting records.
     if not modules:
-        modules.add("meeting")
+        modules.update(["attendance", "hierarchy", "odc", "meeting"])
+        
 
     return sorted(modules)

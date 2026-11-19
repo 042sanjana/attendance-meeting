@@ -39,22 +39,13 @@ HIERARCHY_DB = os.getenv(
 MEETING_DB = os.getenv("MEETING_DB_PATH")
 
 if not MEETING_DB:
-    _workspace = BACKEND_DIR
-    while _workspace.name.lower() != "attendance-meeting" and _workspace.parent != _workspace:
-        _workspace = _workspace.parent
+   
 
-    _meeting_candidates = []
-    if _workspace.name.lower() == "attendance-meeting":
-        _meeting_candidates = list(_workspace.rglob("meeting.db"))
+    meeting_candidates = list(BACKEND_DIR.rglob("meeting.db"))
+    
+   
 
-    _preferred_meeting_db = None
-    for _candidate in _meeting_candidates:
-        _candidate_text = str(_candidate).lower()
-        if "meeting-backend-main" in _candidate_text:
-            _preferred_meeting_db = str(_candidate)
-            break
-
-    MEETING_DB = _preferred_meeting_db or (
+    MEETING_DB = (
         str(_meeting_candidates[0])
         if _meeting_candidates
         else str(BACKEND_DIR / "meeting.db")

@@ -15,7 +15,7 @@ import MeetingLoginPage from './pages/MeetingLoginPage.jsx'
 import MeetingRegisterPage from './pages/MeetingRegisterPage.jsx'
 import OrganizationHierarchyPage from './pages/OrganizationHierarchyPage.jsx'
 import { getCurrentMeetingUser, isMeetingAuthenticated, clearMeetingAuth } from './meetingApi.js'
-
+import ChatbotWidget from './components/ChatbotWidget.jsx'  
 
 function ProtectedMeetingRoute({ children }) {
   return isMeetingAuthenticated() ? children : <Navigate to="/meeting-login" replace />
@@ -82,7 +82,7 @@ export default function App() {
           }}
         />
       )}
-      
+      <ChatbotWidget />
     </div>
   )
 }

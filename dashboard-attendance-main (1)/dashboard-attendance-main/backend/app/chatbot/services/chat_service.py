@@ -41,10 +41,12 @@ def chat(message: str, session_id: str) -> dict:
             "question": question,
             "session_id": session_id,
         })
-    except Exception:
+    except Exception as exc:
+        import logging 
+        logging.exception("workflow chatbot failed")
         answer = (
-            "I could not complete that analysis because one or more connected data or local model services were unavailable. "
-            "Please verify the FastAPI server and Ollama model, then try the question again."
+            f"Unable to complete the analysis."f"Please check the connected database or Ollama service."
+            f"Error:{str}"
         )
         add_message(session_id, message, answer)
         return {"answer": answer, "session_id": session_id, "sources": []}

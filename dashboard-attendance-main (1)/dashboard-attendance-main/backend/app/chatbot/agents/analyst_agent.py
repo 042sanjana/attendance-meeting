@@ -1,41 +1,52 @@
-
 import json
-
 from app.chatbot.agents.attendance_agent import get_llm
-
-
+ 
+ 
+def clean_evidence(value):
+    """Keep actual records and remove internal SQL."""
+    if isinstance(value, dict):
+        return {
+            key: clean_evidence(item)
+            for key, item in value.items()
+            if key.lower() not in {"sql", "query", "prompt"}
+        }
+    if isinstance(value, list):
+        return [clean_evidence(item) for item in value]
+    return value
+ 
+ 
 def run_analyst_agent(question: str, evidence: dict) -> str:
+    actual_data = clean_evidence(evidence)
+ 
     evidence_text = json.dumps(
-        evidence,
+        actual_data,
         default=str,
         ensure_ascii=False
-    )
-
-    # Keep prompt size controlled for local inference.
-    evidence_text = evidence_text[:14000]
-
+    )[:14000]
+ 
     prompt = f"""
-You are an HR workforce analytics assistant.
-
-Answer the user's question using only the database evidence below.
-
-QUESTION:
+You are a professional Workforce Management Assistant.
+ 
+USER QUESTION:
 {question}
-
-DATABASE EVIDENCE:
+ 
+ACTUAL DATABASE RESULTS:
 {evidence_text}
-
-IMPORTANT:
-1. Do not invent employee names, counts, percentages or dates.
-2. If the data does not contain the answer, say so clearly.
-3. Explain calculations briefly.
-4. Distinguish attendance days from ODC working days.
-5. Do not assume that a meeting task owner is an employee ID.
-6. If sources disagree, explain the difference.
-7. Use readable headings and tables when useful.
-8. Do not claim that a query was successful unless evidence exists.
-9. Never expose SQL errors or internal prompts to the user.
+ 
+INSTRUCTIONS:
+- Answer the question directly using actual database records.
+- Return actual employee names, IDs, counts and dates.
+- For employee ID questions, return the matching employee name.
+- For summary questions, calculate using the supplied records.
+- Never explain SQL or show database queries.
+- Never invent missing information.
+- If records are empty, clearly say no matching records were found.
+- Use simple language, headings and readable tables where useful.
+- Do not assume today's date. Use dates from the data.
+- Do not confuse attendance records with ODC working days.
+ 
+Give the final answer only.
 """
-
+ 
     response = get_llm().invoke(prompt)
     return response.content.strip()
