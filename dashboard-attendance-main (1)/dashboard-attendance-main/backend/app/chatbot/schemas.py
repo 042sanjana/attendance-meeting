@@ -1,4 +1,3 @@
-
 from typing import Optional
 from pydantic import BaseModel, Field
 
@@ -17,3 +16,4 @@ class ChatResponse(BaseModel):
     answer: str
     session_id: str
     sources: list[SourceItem] = []
+    tables: list[dict] = []

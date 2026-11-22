@@ -86,6 +86,65 @@ def _describe_table(conn, table: str) -> str:
     return "\n".join(lines)
 
 
+def invalidate_cache():
+    """Clear cached schemas and date context after an upload or reset."""
+    global _date_cache
+    with _lock:
+        _schema_cache.clear()
+        _date_cache = None
+
+
+def find_employee_ids_in_text(text: str) -> list[str]:
+    """Find employee IDs mentioned in text by matching actual values in live databases.
+
+    This supports numeric, alphanumeric and arbitrary supported Excel ID formats
+    without assuming one regex pattern or hardcoding values.
+    """
+    text = text or ""
+    candidates: list[str] = []
+    for match in re.finditer(r"(?<![\w.-])([A-Za-z]*[_-]?[A-Za-z0-9]+(?:[-_/][A-Za-z0-9]+)*)(?![\w.-])", text):
+        value = match.group(1).strip()
+        if value and (any(ch.isdigit() for ch in value) or re.search(r"^[A-Za-z]{2,}\d+$", value, re.I)):
+            candidates.append(value)
+
+    known: dict[str, str] = {}
+    for module, table, column in (
+        ("attendance", "employees", "emp_id"),
+        ("odc", "odc_employees", "emp_id"),
+        ("hierarchy", "employees", "employee_number"),
+    ):
+        try:
+            conn = connect(module)
+            try:
+                exists = conn.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
+                ).fetchone()
+                if exists:
+                    pragma = conn.execute(f'PRAGMA table_info("{table}")').fetchall()
+                    if any(row[1].lower() == column.lower() for row in pragma):
+                        for (value,) in conn.execute(
+                            f'SELECT DISTINCT CAST("{column}" AS TEXT) FROM "{table}" '
+                            f'WHERE "{column}" IS NOT NULL AND TRIM(CAST("{column}" AS TEXT)) <> ""'
+                        ).fetchall():
+                            exact = str(value).strip()
+                            known[exact.casefold()] = exact
+            finally:
+                conn.close()
+        except Exception:
+            continue
+
+    found: list[str] = []
+    for candidate in candidates:
+        exact = known.get(candidate.casefold())
+        if exact and exact not in found:
+            found.append(exact)
+    for folded, exact in known.items():
+        if re.search(r"(?<![\w.-])" + re.escape(exact) + r"(?![\w.-])", text, re.I):
+            if exact not in found:
+                found.append(exact)
+    return found
+
+
 def get_module_schema(module: str) -> str:
     now = time.time()
     with _lock:

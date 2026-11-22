@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect
@@ -60,7 +59,7 @@ function TaskCalendar() {
 
       const response =
         await axios.get(
-          `http://127.0.0.1:8000/meetings/user/${user.id}/tasks`
+          `http://127.0.0.1:8001/meetings/user/${user.id}/tasks`
         );
 
       setTasks(response.data);
@@ -76,7 +75,7 @@ function TaskCalendar() {
     try {
 
       await axios.put(
-        `http://127.0.0.1:8000/meetings/tasks/${taskId}/status`,
+        `http://127.0.0.1:8001/meetings/tasks/${taskId}/status`,
         null,
         {
           params: { status }
@@ -103,7 +102,7 @@ function TaskCalendar() {
     try {
 
       await axios.put(
-        `http://127.0.0.1:8000/meetings/tasks/${taskId}/deadline`,
+        `http://127.0.0.1:8001/meetings/tasks/${taskId}/deadline`,
         null,
         {
           params: { deadline_date: deadlineDate }
@@ -135,7 +134,7 @@ function TaskCalendar() {
       );
 
     window.open(
-      `http://127.0.0.1:8000/meetings/tasks/export/${user.id}`,
+      `http://127.0.0.1:8001/meetings/tasks/export/${user.id}`,
       "_blank"
     );
 

@@ -529,6 +529,12 @@ async def upload_odc(
 
     db.commit()
 
+    try:
+        from app.chatbot.tools.schema_discovery import invalidate_cache
+        invalidate_cache()
+    except Exception:
+        pass
+
     return {
         'message': 'ODC workbook processed successfully',
         'upload_id': upload.id,

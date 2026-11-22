@@ -15,6 +15,7 @@ export default function MeetingHistoryPage() {
   const [mailTo, setMailTo] = useState('')
   const [mailSubject, setMailSubject] = useState('')
   const [selectedMeeting, setSelectedMeeting] = useState(null)
+  const [mailProvider, setMailProvider] = useState('gmail')
 
   const loadMeetings = async () => {
     const user = getCurrentMeetingUser()
@@ -75,6 +76,7 @@ export default function MeetingHistoryPage() {
     setSelectedMeeting(meeting)
     setMailTo('')
     setMailSubject(`Meeting Summary - ${meeting.file_name}`)
+    setMailProvider('gmail')
     setShowMailModal(true)
   }
 
@@ -85,8 +87,18 @@ export default function MeetingHistoryPage() {
     }
 
     const body = `Hello,\n\nPlease find the meeting summary below.\n\n---------------------------------------\n\n${selectedMeeting.summary}\n\nRegards,\nAI Meeting Notes System`
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(mailTo)}&su=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(body)}`
-    window.open(gmailUrl, '_blank')
+
+    if (mailProvider === 'outlook') {
+      const outlookParams = new URLSearchParams({
+        to: mailTo.trim(),
+        subject: mailSubject,
+        body,
+      })
+      window.open(`https://outlook.office.com/mail/deeplink/compose?${outlookParams.toString()}`, '_blank')
+    } else {
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(mailTo)}&su=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(body)}`
+      window.open(gmailUrl, '_blank')
+    }
     setShowMailModal(false)
   }
 
@@ -181,11 +193,16 @@ export default function MeetingHistoryPage() {
             <input type="email" value={mailTo} onChange={(e) => setMailTo(e.target.value)} />
             <label>Subject</label>
             <input type="text" value={mailSubject} onChange={(e) => setMailSubject(e.target.value)} />
+            <label>Email Provider</label>
+            <div className="mail-buttons">
+              <button type="button" className={mailProvider === 'gmail' ? 'primary-btn' : 'secondary-btn'} onClick={() => setMailProvider('gmail')}>Gmail</button>
+              <button type="button" className={mailProvider === 'outlook' ? 'primary-btn' : 'secondary-btn'} onClick={() => setMailProvider('outlook')}>Outlook</button>
+            </div>
             <label>Summary Preview</label>
             <textarea readOnly rows={10} value={selectedMeeting?.summary || ''} />
             <div className="mail-buttons">
               <button className="secondary-btn" onClick={() => setShowMailModal(false)}>Cancel</button>
-              <button className="primary-btn" onClick={sendMail}>Open Gmail</button>
+              <button className="primary-btn" onClick={sendMail}>Open {mailProvider === 'outlook' ? 'Outlook' : 'Gmail'}</button>
             </div>
           </div>
         </div>

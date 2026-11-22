@@ -22,28 +22,31 @@ AGENTS = {
 
 
 def retrieve_node(state: ChatState):
-    """Runs only the selected agents, one after another (a local Ollama
-    server handles one generation at a time, so parallelism would only
-    risk timeouts)."""
+    """Run the selected agents sequentially with one shared interface."""
     question = state["question"]
     ids = state.get("employee_ids") or []
     out: dict = {}
 
     for module in state.get("selected_modules") or []:
         try:
-            out[f"{module}_result"] = AGENTS[module](question, ids)
-        except Exception:
+            out[f"{module}_result"] = AGENTS[module](question, employee_ids=ids)
+        except Exception as exc:
             log.exception("Agent %s crashed", module)
             out[f"{module}_result"] = {
-                "module": module, "sql": None, "data": None, "error": "query_failed",
+                "module": module,
+                "sql": None,
+                "data": None,
+                "error": "query_failed",
+                "error_detail": f"{type(exc).__name__}: {exc}",
             }
 
     if "meeting" in (state.get("selected_modules") or []):
         try:
             out["rag_result"] = run_rag_agent(question)
-        except Exception:
+        except Exception as exc:
             log.exception("Transcript search failed")
             out["rag_result"] = ""
+            out["rag_error"] = f"{type(exc).__name__}: {exc}"
     return out
 
 

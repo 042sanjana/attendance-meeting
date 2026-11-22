@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { Bot, Send, Sparkles, X, Mic, Square } from 'lucide-react'
@@ -75,6 +74,7 @@ export default function ChatbotWidget() {
           role: 'assistant',
           content: response.data.answer || 'No answer was returned.',
           sources: response.data.sources || [],
+          tables: response.data.tables || [],
           reportingPeriod: response.data.reporting_period,
           chart: response.data.chart,
         },
@@ -347,6 +347,27 @@ export default function ChatbotWidget() {
     }
   }
 
+  // Render result tables in the chatbot bubble
+  const renderTables = (tables) => {
+    if (!Array.isArray(tables) || !tables.length) return null
+
+    return tables.map((table, tableIndex) => (
+      <div className="chatbot-meta" key={`${table.title || 'table'}-${tableIndex}`}>
+        {table.title && <strong>{table.title}</strong>}
+        <table>
+          <thead>
+            <tr>{(table.columns || []).map((column) => <th key={column}>{column}</th>)}</tr>
+          </thead>
+          <tbody>
+            {(table.rows || []).map((row, rowIndex) => (
+              <tr key={rowIndex}>{(row || []).map((cell, cellIndex) => <td key={cellIndex}>{cell ?? ''}</td>)}</tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ))
+  }
+
   return (
     <>
       {open && (
@@ -392,6 +413,7 @@ export default function ChatbotWidget() {
                   </div>
 
                   {renderChart(item.chart)}
+                  {renderTables(item.tables)}
 
                   {item.reportingPeriod && (
                     <div className="chatbot-meta">

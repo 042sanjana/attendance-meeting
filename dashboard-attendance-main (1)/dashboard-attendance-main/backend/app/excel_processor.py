@@ -1,4 +1,3 @@
-
 """
 Handles reading, validating and upserting attendance Excel files.
 
@@ -910,5 +909,11 @@ def process_excel_file(
     log.preview_updated = preview_updated
 
     log.errors_list = errors
+
+    try:
+        from app.chatbot.tools.schema_discovery import invalidate_cache
+        invalidate_cache()
+    except Exception:
+        pass
 
     return log

@@ -38,7 +38,7 @@ const uploadAudio = async () => {
     const token=localStorage.getItem("token");
     const response =
       await axios.post(
-        `http://127.0.0.1:8000/meetings/upload`,
+        `http://127.0.0.1:8001/meetings/upload`,
         formData,
         {
           headers: {

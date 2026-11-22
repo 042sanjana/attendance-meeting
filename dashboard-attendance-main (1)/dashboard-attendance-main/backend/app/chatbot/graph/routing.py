@@ -5,13 +5,12 @@ import logging
 import re
 
 from app.chatbot.agents.sql_agent import LLMUnavailable, call_llm
+from app.chatbot.tools.schema_discovery import find_employee_ids_in_text
 
 log = logging.getLogger(__name__)
 
 VALID = ("attendance", "hierarchy", "odc", "meeting")
-ID_RE = re.compile(r"(?<![\w.-])\d{5,10}(?![\w-])")
 
-# Words that unambiguously name a module (always honoured).
 STRONG = {
     "attendance": r"\battendance\b",
     "hierarchy": r"\bhierarchy\b|\borg(?:anization|anisation)?(?:al)? chart\b",
@@ -19,25 +18,21 @@ STRONG = {
     "meeting": r"\bmeetings?\b|\btranscripts?\b|\baction items?\b|\bminutes\b",
 }
 
-# Broader vocabulary, used only when the LLM cannot route.
 BROAD = {
-    "attendance": r"\b(present|absent|wfh|work from home|half[- ]?day|check[- ]?in|check[- ]?out|late|leave)\b",
-    "hierarchy": r"\b(manager|managers|reports? to|reporting|direct reports?|designation|team members?|subordinates?)\b",
-    "odc": r"\b(onsite|offshore|working days|lob|delivery manager|dm name|project location)\b",
-    "meeting": r"\b(decisions?|tasks?|deadlines?|owner|recording|summar(?:y|ize|ise))\b",
+    "attendance": r"\b(present|absent|wfh|work from home|half[- ]?day|check[- ]?in|check[- ]?out|late|leave|attendance percentage|working from home)\b",
+    "hierarchy": r"\b(manager|managers|reports? to|reporting|direct reports?|designation|team members?|subordinates?|employee details|location)\b",
+    "odc": r"\b(onsite|offshore|working days|lob|delivery manager|dm name|project location|project-wise|location-wise)\b",
+    "meeting": r"\b(decisions?|tasks?|deadlines?|owner|recording|summar(?:y|ize|ise)|pending)\b",
 }
 
 
 def extract_employee_ids(text: str) -> list[str]:
-    seen = []
-    for m in ID_RE.findall(text or ""):
-        if m not in seen:
-            seen.append(m)
-    return seen
+    """Extract IDs from the question and confirm them against the live databases."""
+    return find_employee_ids_in_text(text)
 
 
 def _match(patterns: dict, q: str) -> set[str]:
-    return {m for m, p in patterns.items() if re.search(p, q, re.I)}
+    return {module for module, pattern in patterns.items() if re.search(pattern, q, re.I)}
 
 
 ROUTER_PROMPT = """Decide which data modules are needed to answer the question.
@@ -45,11 +40,11 @@ ROUTER_PROMPT = """Decide which data modules are needed to answer the question.
 Modules:
 - attendance: daily attendance per employee (present, absent, WFH, leave, check-in/out times, attendance percentages)
 - hierarchy: organization chart (employee names, designation, manager, who reports to whom, location, joining date, email)
-- odc: ODC tracker (ODC working days, ODC roster, project, PM, LOB, delivery manager)
-- meeting: meeting notes (summaries, transcripts, decisions, action items / tasks, owners, deadlines)
+- odc: ODC tracker (ODC working days, ODC roster, project, PM, delivery manager)
+- meeting: meeting notes (summaries, transcripts, decisions, action items/tasks, owners, deadlines)
 
 Rules:
-- Select every module needed. Questions that combine topics need several modules.
+- Select every module needed.
 - A question that only identifies an employee needs attendance, hierarchy and odc.
 - Return JSON only, for example {{"modules": ["attendance", "odc"]}}
 
@@ -66,11 +61,10 @@ def _llm_modules(question: str) -> set[str] | None:
     if not match:
         return None
     try:
-        mods = json.loads(match.group(0)).get("modules", [])
+        modules = json.loads(match.group(0)).get("modules", [])
     except (ValueError, AttributeError):
         return None
-    chosen = {m for m in mods if m in VALID}
-    return chosen or None
+    return {module for module in modules if module in VALID} or None
 
 
 def route_question(question: str, employee_ids: list[str] | None = None) -> list[str]:
@@ -79,12 +73,19 @@ def route_question(question: str, employee_ids: list[str] | None = None) -> list
     broad = _match(BROAD, question)
 
     if ids:
-        # An employee ID is a deterministic lookup: no LLM call needed.
-        chosen = strong | broad or {"attendance", "hierarchy", "odc"}
+        chosen = set(strong)
+        q = question.lower()
+        explicit_all = any(word in q for word in ("all information", "details", "employee information", "find employee", "show employee"))
+        if explicit_all:
+            chosen |= {"attendance", "hierarchy", "odc"}
+        else:
+            chosen |= broad
+            if not chosen:
+                chosen = {"attendance", "hierarchy", "odc"}
     else:
         llm = _llm_modules(question)
-        chosen = set(strong) | (llm if llm is not None else broad)
+        chosen = strong | (llm if llm is not None else broad)
         if not chosen and re.search(r"\b(employees?|staff|people|everyone)\b", question, re.I):
             chosen = {"attendance", "hierarchy", "odc"}
 
-    return [m for m in VALID if m in chosen]
+    return [module for module in VALID if module in chosen]

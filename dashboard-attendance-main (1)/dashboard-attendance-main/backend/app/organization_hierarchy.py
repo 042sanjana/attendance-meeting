@@ -287,13 +287,45 @@ async def upload_org(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=f"Could not read Excel file: {exc}") from exc
 
     df.columns = [str(col).strip() for col in df.columns]
-    employees = df.to_dict(orient="records")
+
+    def norm_header(value: Any) -> str:
+        return ''.join(ch for ch in str(value).lower() if ch.isalnum())
+
+    aliases = {
+        "employee_number": ("employeenumber", "employeeid", "empid", "empno"),
+        "employee_name": ("employeename", "empname", "name"),
+    }
+    mapped = {}
+    for canonical, names in aliases.items():
+        match = next((col for col in df.columns if norm_header(col) in names), None)
+        mapped[canonical] = match
+
+    missing = [key for key, col in mapped.items() if col is None]
+    if missing:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing required hierarchy Excel columns: " + ", ".join(missing)
+            + ". Expected Employee Number and Employee Name.",
+        )
+
+    records = []
+    for _, row in df.iterrows():
+        record = dict(row)
+        record["employee_number"] = row[mapped["employee_number"]]
+        record["employee_name"] = row[mapped["employee_name"]]
+        records.append(record)
 
     clear_database()
-    for employee in employees:
+    for employee in records:
         row = dict(employee)
         row["PROFILE"] = FEMALE_PROFILE if str(row.get("GENDER") or row.get("gender") or "").strip().lower() == "female" else MALE_PROFILE
         insert_employee(row)
+
+    try:
+        from app.chatbot.tools.schema_discovery import invalidate_cache
+        invalidate_cache()
+    except Exception:
+        pass
 
     return get_hierarchy()
 

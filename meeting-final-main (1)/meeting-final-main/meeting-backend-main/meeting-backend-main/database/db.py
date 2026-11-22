@@ -11,6 +11,7 @@ try:
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS meetings(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
             file_name TEXT,
             transcript TEXT,
             summary TEXT,
@@ -19,6 +20,12 @@ try:
         )
     """)
     
+    meeting_columns = {
+        row[1] for row in cursor.execute("PRAGMA table_info(meetings)").fetchall()
+    }
+    if "user_id" not in meeting_columns:
+        cursor.execute("ALTER TABLE meetings ADD COLUMN user_id INTEGER")
+
     cursor.execute("""
 CREATE TABLE IF NOT EXISTS tasks(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,6 +55,5 @@ except sqlite3.Error as e:
 finally:
     cursor.close()
     conn.close()
-    
-    
-    
+
+

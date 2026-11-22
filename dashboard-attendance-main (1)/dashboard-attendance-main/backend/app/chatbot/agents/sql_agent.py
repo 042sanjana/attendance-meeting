@@ -141,20 +141,27 @@ ID_TEMPLATES = {
 SELECT e.emp_id, e.name, a.status, COUNT(a.id) AS days,
        MIN(date(a."date")) AS first_date, MAX(date(a."date")) AS last_date
 FROM employees e LEFT JOIN attendance a ON a.emp_id = e.emp_id
-WHERE LTRIM(e.emp_id, '0') = LTRIM(:id, '0')
+WHERE CAST(e.emp_id AS TEXT) = CAST(:id AS TEXT)
 GROUP BY e.emp_id, e.name, a.status""",
     "hierarchy": """
 SELECT e.employee_number, e.employee_name, e.designation, e.manager_id,
        m.employee_name AS manager_name, e.location, e.email_address,
        e.date_of_joining
 FROM employees e LEFT JOIN employees m ON m.employee_number = e.manager_id
-WHERE LTRIM(e.employee_number, '0') = LTRIM(:id, '0')""",
+WHERE CAST(e.employee_number AS TEXT) = CAST(:id AS TEXT)""",
     "odc": """
-SELECT r.emp_id, r.name, r.location, r.project_name, r.pm_name,
-       (SELECT COUNT(DISTINCT l.log_date) FROM odc_logs l
-         WHERE l.emp_id = r.emp_id) AS odc_working_days
-FROM odc_employees r
-WHERE LTRIM(r.emp_id, '0') = LTRIM(:id, '0')""",
+WITH ids AS (
+  SELECT emp_id FROM odc_employees WHERE emp_id IS NOT NULL
+  UNION
+  SELECT emp_id FROM odc_logs WHERE emp_id IS NOT NULL
+)
+SELECT ids.emp_id, r.name, r.location, r.project_name, r.pm_name,
+       COUNT(DISTINCT date(l.log_date)) AS odc_working_days
+FROM ids
+LEFT JOIN odc_employees r ON CAST(r.emp_id AS TEXT) = CAST(ids.emp_id AS TEXT)
+LEFT JOIN odc_logs l ON CAST(l.emp_id AS TEXT) = CAST(ids.emp_id AS TEXT)
+WHERE CAST(ids.emp_id AS TEXT) = CAST(:id AS TEXT)
+GROUP BY ids.emp_id, r.name, r.location, r.project_name, r.pm_name""",
 }
 
 
@@ -208,7 +215,7 @@ def _plan_and_run(module, question, schema, date_context, employee_ids):
 REPORTS_TEMPLATE = """
 SELECT e.employee_number, e.employee_name, e.designation, e.location
 FROM employees e
-WHERE LTRIM(e.manager_id, '0') = LTRIM(:id, '0')
+WHERE CAST(e.manager_id AS TEXT) = CAST(:id AS TEXT)
 ORDER BY e.employee_name"""
 REPORTS_RE = re.compile(r"\b(reports? to|reporting to|direct reports?|team|subordinates?|who reports)\b", re.I)
 
