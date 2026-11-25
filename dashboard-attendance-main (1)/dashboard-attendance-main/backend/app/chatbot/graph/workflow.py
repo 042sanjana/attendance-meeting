@@ -25,11 +25,16 @@ def retrieve_node(state: ChatState):
     """Run the selected agents sequentially with one shared interface."""
     question = state["question"]
     ids = state.get("employee_ids") or []
+    names = state.get("employee_names") or []
     out: dict = {}
 
     for module in state.get("selected_modules") or []:
         try:
-            out[f"{module}_result"] = AGENTS[module](question, employee_ids=ids)
+            out[f"{module}_result"] = AGENTS[module](
+                question,
+                employee_ids=ids,
+                employee_names=names,
+            )
         except Exception as exc:
             log.exception("Agent %s crashed", module)
             out[f"{module}_result"] = {

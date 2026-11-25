@@ -257,6 +257,34 @@ def lookup_answer(summaries, employee_ids, problems) -> str:
     return text
 
 
+def name_lookup_answer(summaries, employee_names, problems) -> str:
+    rows = []
+    for summary in summaries:
+        if summary["error"]:
+            continue
+        for row in summary["rows"]:
+            rec = dict(zip(summary["columns"], row))
+            emp_id = rec.get("emp_id") or rec.get("employee_number")
+            name = rec.get("name") or rec.get("employee_name")
+            if emp_id:
+                rows.append((str(emp_id), str(name) if name else "(name not available)"))
+
+    unique = list(dict.fromkeys(rows))
+    if not unique:
+        text = "No employee matching " + ", ".join(employee_names) + " was found in the connected records."
+    elif len(unique) == 1:
+        emp_id, name = unique[0]
+        text = f"The employee **{name}** has employee ID **{emp_id}**."
+    else:
+        text = "I found multiple matching employees:\n" + "\n".join(
+            f"- **{name}** — Employee ID **{emp_id}**" for emp_id, name in unique
+        )
+
+    if problems:
+        text += "\n\n" + "\n".join(f"- Note: {p}." for p in problems)
+    return text
+
+
 def build_final(state) -> dict:
     summaries = collect_results(state)
     rag = state.get("rag_result") or ""
@@ -270,8 +298,16 @@ def build_final(state) -> dict:
     sources = ui_sources(summaries, has_rag)
     has_rows = any(s["rows"] for s in summaries if not s["error"]) or has_rag
 
+    employee_names = state.get("employee_names") or []
+    name_id_question = bool(employee_names) and re.search(
+        r"\b(employee|emp)?\s*(id|number)|\b(id|number)\s*(of|for)",
+        state["question"], re.I,
+    )
+
     if not summaries and not has_rag:
         answer = "I could not retrieve relevant records from the connected modules."
+    elif name_id_question:
+        answer = name_lookup_answer(summaries, employee_names, problems)
     elif not has_rows and not state.get("employee_ids"):
         answer = no_records_answer(problems, date_context)
     elif state.get("employee_ids") and all(

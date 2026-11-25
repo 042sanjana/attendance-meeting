@@ -1,5 +1,5 @@
 from app.chatbot.agents.sql_agent import run_module_agent
 
 
-def run_hierarchy_agent(question: str, employee_ids=None) -> dict:
-    return run_module_agent("hierarchy", question, employee_ids)
+def run_hierarchy_agent(question: str, employee_ids=None, employee_names=None) -> dict:
+    return run_module_agent("hierarchy", question, employee_ids, employee_names)

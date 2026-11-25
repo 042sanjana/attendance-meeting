@@ -164,6 +164,34 @@ WHERE CAST(ids.emp_id AS TEXT) = CAST(:id AS TEXT)
 GROUP BY ids.emp_id, r.name, r.location, r.project_name, r.pm_name""",
 }
 
+REPORTS_TEMPLATE = """
+SELECT e.employee_number, e.employee_name, e.designation, e.location
+FROM employees e
+WHERE CAST(e.manager_id AS TEXT) = CAST(:id AS TEXT)
+ORDER BY e.employee_name"""
+
+NAME_LOOKUP_TEMPLATES = {
+    "attendance": """
+SELECT emp_id, name
+FROM employees
+WHERE LOWER(TRIM(name)) = LOWER(TRIM(:name))
+   OR LOWER(TRIM(name)) LIKE LOWER('%' || TRIM(:name) || '%')
+LIMIT 100""",
+    "hierarchy": """
+SELECT employee_number AS emp_id, employee_name AS name, designation,
+       manager_id, location, email_address, date_of_joining
+FROM employees
+WHERE LOWER(TRIM(employee_name)) = LOWER(TRIM(:name))
+   OR LOWER(TRIM(employee_name)) LIKE LOWER('%' || TRIM(:name) || '%')
+LIMIT 100""",
+    "odc": """
+SELECT emp_id, name, location, project_name, pm_name
+FROM odc_employees
+WHERE LOWER(TRIM(name)) = LOWER(TRIM(:name))
+   OR LOWER(TRIM(name)) LIKE LOWER('%' || TRIM(:name) || '%')
+LIMIT 100""",
+}
+
 
 def build_prompt(module, question, schema, date_context, employee_ids, error=None, previous_sql=None):
     ids = ""
@@ -267,10 +295,27 @@ LOOKUP_BLOCKERS = re.compile(
 )
 
 
-def run_module_agent(module: str, question: str, employee_ids=None) -> dict:
+def run_module_agent(module: str, question: str, employee_ids=None, employee_names=None) -> dict:
     """Never raises: failures are reported through the 'error' code."""
     employee_ids = list(employee_ids or [])
+    employee_names = list(employee_names or [])
     result = {"module": module, "sql": None, "data": None, "error": None}
+
+    if employee_names and module in NAME_LOOKUP_TEMPLATES:
+        try:
+            merged = None
+            for name in employee_names:
+                data = execute_select(module, NAME_LOOKUP_TEMPLATES[module], {"name": name})
+                if merged is None:
+                    merged = data
+                else:
+                    merged["rows"].extend(data["rows"])
+                    merged["row_count"] = len(merged["rows"])
+            if merged:
+                return {"module": module, "sql": "employee name lookup", "data": merged, "error": None}
+        except (DatabaseUnavailable, SQLExecutionError, UnsafeSQL) as exc:
+            log.warning("%s name lookup failed: %s", module, exc)
+            result["error"] = "database_unavailable" if isinstance(exc, DatabaseUnavailable) else "query_failed"
 
     if employee_ids and module in ID_TEMPLATES and not LOOKUP_BLOCKERS.search(question):
         try:

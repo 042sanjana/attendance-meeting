@@ -265,3 +265,48 @@ def diagnostics() -> dict:
         out["attendance_status_counts"] = f"unavailable: {exc}"
     out["date_context"] = get_date_context().splitlines()
     return out
+
+
+def find_employee_names_in_text(text: str) -> list[str]:
+    """Find employee names mentioned in the question by matching live database values."""
+    text = text or ""
+    known: dict[str, str] = {}
+
+    for module, table, name_column in (
+        ("attendance", "employees", "name"),
+        ("odc", "odc_employees", "name"),
+        ("hierarchy", "employees", "employee_name"),
+    ):
+        try:
+            conn = connect(module)
+            try:
+                exists = conn.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
+                ).fetchone()
+                if exists:
+                    pragma = conn.execute(f'PRAGMA table_info("{table}")').fetchall()
+                    if any(row[1].lower() == name_column.lower() for row in pragma):
+                        for (value,) in conn.execute(
+                            f'SELECT DISTINCT TRIM(CAST("{name_column}" AS TEXT)) FROM "{table}" '
+                            f'WHERE "{name_column}" IS NOT NULL AND TRIM(CAST("{name_column}" AS TEXT)) <> ""'
+                        ).fetchall():
+                            name = str(value).strip()
+                            if name:
+                                known[name.casefold()] = name
+            finally:
+                conn.close()
+        except Exception:
+            continue
+
+    found: list[str] = []
+    lowered = text.casefold()
+    for folded, name in known.items():
+        if folded in lowered:
+            found.append(name)
+            continue
+
+        name_words = [word for word in re.findall(r"[A-Za-z0-9]+", folded) if len(word) >= 2]
+        if len(name_words) >= 2 and all(word in lowered for word in name_words):
+            found.append(name)
+
+    return list(dict.fromkeys(found))

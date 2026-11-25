@@ -6,6 +6,7 @@ class ChatState(TypedDict, total=False):
     raw_question: str
     session_id: str
     employee_ids: list[str]
+    employee_names: list[str]
     selected_modules: list[str]
     attendance_result: dict[str, Any]
     hierarchy_result: dict[str, Any]

@@ -10,8 +10,8 @@ def find_employee_id(question: str):
     return ids[0] if ids else None
 
 
-def run_attendance_agent(question: str, employee_ids=None) -> dict:
-    return run_module_agent("attendance", question, employee_ids)
+def run_attendance_agent(question: str, employee_ids=None, employee_names=None) -> dict:
+    return run_module_agent("attendance", question, employee_ids, employee_names)
 
 
 def run_odc_agent(question: str, employee_ids=None) -> dict:
