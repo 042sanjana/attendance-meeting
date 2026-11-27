@@ -28,5 +28,6 @@ langchain-huggingface
 sentence-transformers
 
 faster-whisper
+dateparser
 python-dotenv
 langchain-text-splitters

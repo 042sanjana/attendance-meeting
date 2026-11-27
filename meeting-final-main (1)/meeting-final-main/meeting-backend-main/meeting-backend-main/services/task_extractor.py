@@ -100,6 +100,68 @@ LOW_PRIORITY_WORDS = [
 
 from datetime import datetime
 
+EMPLOYEE_ID_RE = re.compile(
+    r"\b(?:EMPLOYEE\s*(?:ID|NUMBER)?\s*[:#]?\s*)?"
+    r"((?:EMP|E)[-_]?\d{2,}|ABC\d{2,}|[A-Z]{2,}\d{2,})\b",
+    re.I,
+)
+
+DEADLINE_RE = re.compile(
+    r"(?:by|before|within|due on|deadline(?:\s+(?:is|:))?)\s+([^.!?]+)",
+    re.I,
+)
+
+PRIORITY_RE = re.compile(
+    r"(?:high|medium|low)[-\s]+priority|priority\s*[:=-]?\s*(high|medium|low)",
+    re.I,
+)
+
+
+def extract_employee_id(sentence: str) -> str | None:
+    match = EMPLOYEE_ID_RE.search(sentence)
+    if not match:
+        return None
+    return match.group(1).upper().replace(" ", "")
+
+
+def extract_deadline(sentence: str) -> tuple[str | None, str | None]:
+    match = DEADLINE_RE.search(sentence)
+    if not match:
+        return None, None
+
+    deadline_text = match.group(1).strip()
+    parsed = dateparser.parse(deadline_text, settings={"PREFER_DATES_FROM": "future"})
+    deadline_date = parsed.strftime("%Y-%m-%d") if parsed else None
+    return deadline_text, deadline_date
+
+
+def extract_priority(sentence: str) -> str:
+    match = PRIORITY_RE.search(sentence)
+    if not match:
+        return "Not specified"
+    value = match.group(0).lower()
+    if "high" in value:
+        return "High"
+    if "medium" in value:
+        return "Medium"
+    if "low" in value:
+        return "Low"
+    return "Not specified"
+
+
+def extract_decisions(transcript: str) -> list[str]:
+    decisions = []
+    pattern = re.compile(
+        r"(?:we\s+decided|decided\s+to|decision(?:\s+is)?|we\s+agreed|agreed\s+to|approved)\s+([^.!?]+)",
+        re.I,
+    )
+    for match in pattern.finditer(transcript or ""):
+        value = match.group(1).strip()
+        if value and value not in decisions:
+            decisions.append(value)
+    return decisions
+
+
 def detect_priority(deadline_date=None):
 
     if not deadline_date:
@@ -132,6 +194,7 @@ def detect_priority(deadline_date=None):
 
     except Exception:
         return "Medium"
+
 
 def extract_tasks(transcript):
 

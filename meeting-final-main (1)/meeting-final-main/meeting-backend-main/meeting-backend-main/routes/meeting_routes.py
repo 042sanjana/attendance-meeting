@@ -1,4 +1,3 @@
-
 from fastapi import (
     APIRouter,
     UploadFile,
@@ -71,6 +70,9 @@ async def upload_meeting(
         transcript = transcribe_audio(
             file_path
         )
+
+        if isinstance(transcript, dict):
+            transcript = transcript.get("transcript", "")
 
         summary = generate_summary(
             transcript
@@ -726,7 +728,6 @@ def delete_meeting(
         "success": True,
         "message": "Meeting deleted successfully"
     }
-    
-    
-    
-   
+
+
+
